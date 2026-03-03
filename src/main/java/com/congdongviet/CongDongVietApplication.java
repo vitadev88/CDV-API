@@ -1,0 +1,14 @@
+package com.congdongviet;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+
+@SpringBootApplication
+@EnableJpaAuditing
+public class CongDongVietApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(CongDongVietApplication.class, args);
+    }
+}

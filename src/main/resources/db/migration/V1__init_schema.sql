@@ -1,0 +1,2 @@
+-- CongDongViet initial schema setup
+-- Using InnoDB engine and utf8mb4 charset for all tables
