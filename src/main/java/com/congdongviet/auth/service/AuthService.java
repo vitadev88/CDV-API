@@ -4,7 +4,6 @@ import com.congdongviet.auth.dto.AuthResponse;
 import com.congdongviet.auth.dto.LoginRequest;
 import com.congdongviet.auth.dto.RegisterRequest;
 import com.congdongviet.auth.dto.VerifyOtpRequest;
-import com.congdongviet.auth.entity.OtpVerification;
 import com.congdongviet.auth.entity.Role;
 import com.congdongviet.auth.entity.User;
 import com.congdongviet.auth.repository.UserRepository;
@@ -63,15 +62,15 @@ public class AuthService {
      */
     @Transactional
     public AuthResponse verifyOtp(VerifyOtpRequest request) {
-        OtpVerification otp = otpService.validateOtp(request.getPhone(), request.getOtpCode());
+        otpService.validateOtp(request.getPhone(), request.getOtpCode());
 
         User user = userRepository.findByPhone(request.getPhone())
-                .orElseThrow(() -> new BadRequestException("User not found"));
+                .orElseThrow(() -> new BadRequestException("Invalid or expired OTP"));
 
         user.setVerified(true);
         userRepository.save(user);
 
-        otpService.markVerified(otp);
+        otpService.clearOtp(request.getPhone());
 
         // Build principal and generate JWT without re-authenticating (no password needed)
         UserPrincipal principal = new UserPrincipal(
