@@ -20,16 +20,24 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     /**
-     * Called by JwtAuthenticationFilter with the user ID extracted from the JWT subject.
-     * Also used by AuthenticationManager during login (with email).
+     * Resolves a user by identifier using a priority chain:
+     *  1. email   — contains "@"
+     *  2. phone   — starts with "+" or is all digits
+     *  3. username — fallback (used by SUPER_ADMIN and admin accounts)
      */
     @Override
     public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
-        User user = identifier.contains("@")
-                ? userRepository.findByEmail(identifier)
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + identifier))
-                : userRepository.findByPhone(identifier)
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found with phone: " + identifier));
+        User user;
+        if (identifier.contains("@")) {
+            user = userRepository.findByEmail(identifier)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found: " + identifier));
+        } else if (identifier.startsWith("+") || identifier.matches("\\d+")) {
+            user = userRepository.findByPhone(identifier)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found: " + identifier));
+        } else {
+            user = userRepository.findByUsername(identifier)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found: " + identifier));
+        }
         return toUserPrincipal(user);
     }
 
