@@ -36,4 +36,8 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "VARCHAR(50)")
     private Role role;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean verified = false;
 }

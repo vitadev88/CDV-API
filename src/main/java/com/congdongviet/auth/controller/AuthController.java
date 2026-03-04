@@ -3,6 +3,7 @@ package com.congdongviet.auth.controller;
 import com.congdongviet.auth.dto.AuthResponse;
 import com.congdongviet.auth.dto.LoginRequest;
 import com.congdongviet.auth.dto.RegisterRequest;
+import com.congdongviet.auth.dto.VerifyOtpRequest;
 import com.congdongviet.auth.service.AuthService;
 import com.congdongviet.common.dto.ApiResponse;
 import jakarta.validation.Valid;
@@ -22,10 +23,16 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
-        AuthResponse data = authService.register(request);
+    public ResponseEntity<ApiResponse<Void>> register(@Valid @RequestBody RegisterRequest request) {
+        authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(data, "Registration successful"));
+                .body(ApiResponse.success(null, "OTP sent successfully"));
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<AuthResponse>> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
+        AuthResponse data = authService.verifyOtp(request);
+        return ResponseEntity.ok(ApiResponse.success(data, "Phone number verified successfully"));
     }
 
     @PostMapping("/login")
