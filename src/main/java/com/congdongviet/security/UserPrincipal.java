@@ -16,6 +16,7 @@ public class UserPrincipal implements UserDetails {
     private final String email;
     private final String password;
     private final Collection<? extends GrantedAuthority> authorities;
+    private final boolean verified;
 
     @Override
     public String getUsername() {
@@ -37,8 +38,12 @@ public class UserPrincipal implements UserDetails {
         return true;
     }
 
+    /**
+     * Returns false for unverified accounts, causing Spring Security to throw
+     * DisabledException during login — handled by GlobalExceptionHandler.
+     */
     @Override
     public boolean isEnabled() {
-        return true;
+        return verified;
     }
 }
