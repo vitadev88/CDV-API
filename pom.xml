@@ -93,6 +93,13 @@
             <version>${mapstruct.version}</version>
         </dependency>
 
+        <!-- Twilio -->
+        <dependency>
+            <groupId>com.twilio.sdk</groupId>
+            <artifactId>twilio</artifactId>
+            <version>10.1.0</version>
+        </dependency>
+
         <!-- Dotenv -->
         <dependency>
             <groupId>me.paulschwarz</groupId>
