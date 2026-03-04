@@ -1,0 +1,21 @@
+package com.congdongviet.admin.dto;
+
+import lombok.Builder;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Getter
+@Builder
+public class AdminAccountResponse {
+
+    private UUID id;
+    private String username;
+    private String email;
+    private String fullName;
+    private String phone;
+    private String role;
+    private String createdBy;
+    private LocalDateTime createdAt;
+}
