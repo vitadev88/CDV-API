@@ -3,6 +3,8 @@ package com.congdongviet.auth.service;
 import com.congdongviet.auth.dto.AuthResponse;
 import com.congdongviet.auth.dto.LoginRequest;
 import com.congdongviet.auth.dto.RegisterRequest;
+import com.congdongviet.auth.dto.VerifyOtpRequest;
+import com.congdongviet.auth.entity.OtpVerification;
 import com.congdongviet.auth.entity.Role;
 import com.congdongviet.auth.entity.User;
 import com.congdongviet.auth.repository.UserRepository;
@@ -13,9 +15,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,11 +30,19 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
+    private final OtpService otpService;
 
+    /**
+     * Registers a new user and sends an OTP to their phone number.
+     * The account is inactive (verified=false) until OTP is confirmed.
+     */
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public void register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new BadRequestException("Email already in use");
+        }
+        if (userRepository.existsByPhone(request.getPhone())) {
+            throw new BadRequestException("Phone number already in use");
         }
 
         User user = User.builder()
@@ -38,15 +51,37 @@ public class AuthService {
                 .fullName(request.getFullName())
                 .phone(request.getPhone())
                 .role(Role.USER)
+                .verified(false)
                 .build();
 
         userRepository.save(user);
+        otpService.generateAndSend(request.getPhone());
+    }
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+    /**
+     * Verifies the OTP, activates the account, and returns a JWT token.
+     */
+    @Transactional
+    public AuthResponse verifyOtp(VerifyOtpRequest request) {
+        OtpVerification otp = otpService.validateOtp(request.getPhone(), request.getOtpCode());
+
+        User user = userRepository.findByPhone(request.getPhone())
+                .orElseThrow(() -> new BadRequestException("User not found"));
+
+        user.setVerified(true);
+        userRepository.save(user);
+
+        otpService.markVerified(otp);
+
+        // Build principal and generate JWT without re-authenticating (no password needed)
+        UserPrincipal principal = new UserPrincipal(
+                user.getId(),
+                user.getEmail(),
+                user.getPassword(),
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())),
+                true
         );
-
-        String token = jwtTokenProvider.generateToken(authentication);
+        String token = jwtTokenProvider.generateToken(principal);
 
         return AuthResponse.builder()
                 .id(user.getId())
