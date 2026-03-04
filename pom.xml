@@ -93,6 +93,12 @@
             <version>${mapstruct.version}</version>
         </dependency>
 
+        <!-- Redis -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
         <!-- Twilio -->
         <dependency>
             <groupId>com.twilio.sdk</groupId>
