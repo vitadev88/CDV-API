@@ -236,6 +236,90 @@
 					]
 				}
 			]
+		},
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "Create Admin Account",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.id) {",
+									"        pm.collectionVariables.set('adminId', jsonData.data.id);",
+									"        console.log('Admin ID saved:', jsonData.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"StrongPass123!\",\n    \"username\": \"admin01\",\n    \"fullName\": \"Nguyen Van B\",\n    \"phone\": \"+84909876543\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/accounts",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "accounts"]
+						}
+					},
+					"response": [
+						{
+							"name": "201 - Admin Created",
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"Admin account created successfully\",\n    \"data\": {\n        \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"username\": \"admin01\",\n        \"email\": \"admin@example.com\",\n        \"fullName\": \"Nguyen Van B\",\n        \"phone\": \"+84909876543\",\n        \"role\": \"ADMIN\",\n        \"createdBy\": \"superadmin@congdongviet.com\",\n        \"createdAt\": \"2026-03-04T10:00:00\"\n    }\n}"
+						},
+						{
+							"name": "400 - Email Already In Use",
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Email already in use\"\n}"
+						},
+						{
+							"name": "400 - Username Already In Use",
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Username already in use\"\n}"
+						},
+						{
+							"name": "401 - Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Unauthorized\"\n}"
+						},
+						{
+							"name": "403 - Forbidden (not SUPER_ADMIN)",
+							"status": "Forbidden",
+							"code": 403,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Access denied\"\n}"
+						}
+					]
+				}
+			]
 		}
 	]
 }
