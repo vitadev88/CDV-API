@@ -21,7 +21,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class User extends BaseEntity {
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String email;
 
     @Column(nullable = false)
@@ -40,4 +40,12 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     @Builder.Default
     private boolean verified = false;
+
+    /** Login identifier for admin/system accounts (not used by regular users). */
+    @Column(unique = true, length = 100)
+    private String username;
+
+    /** Records who created this account (e.g. "SYSTEM_BOOTSTRAP", user ID). */
+    @Column(name = "created_by", length = 100)
+    private String createdBy;
 }
