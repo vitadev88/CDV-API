@@ -125,7 +125,7 @@ jobs:
           timeout: 30s
           command_timeout: 2m
           script: |
-            rm -rf /home/${{ secrets.EC2_USER }}/app/nginx/nginx.conf
+            rm -rf /home/${{ secrets.EC2_USER }}/app/nginx
             mkdir -p /home/${{ secrets.EC2_USER }}/app/nginx
 
       - name: Copy files to Staging
@@ -227,7 +227,7 @@ jobs:
           timeout: 30s
           command_timeout: 2m
           script: |
-            rm -rf /home/${{ secrets.EC2_USER }}/app/nginx/nginx.conf
+            rm -rf /home/${{ secrets.EC2_USER }}/app/nginx
             mkdir -p /home/${{ secrets.EC2_USER }}/app/nginx
 
       - name: Copy files to Production
