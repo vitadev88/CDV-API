@@ -3,7 +3,6 @@ package com.congdongviet.auth.service;
 import com.congdongviet.auth.dto.AuthResponse;
 import com.congdongviet.auth.dto.LoginRequest;
 import com.congdongviet.auth.dto.RegisterRequest;
-import com.congdongviet.auth.dto.VerifyOtpRequest;
 import com.congdongviet.auth.entity.Role;
 import com.congdongviet.auth.entity.User;
 import com.congdongviet.auth.repository.UserRepository;
@@ -29,50 +28,38 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
-    private final OtpService otpService;
 
     /**
-     * Registers a new user and sends an OTP to their phone number.
-     * The account is inactive (verified=false) until OTP is confirmed.
+     * Registers a new user with either email or phone (at least one required).
+     * Account is immediately active — no OTP verification needed.
      */
     @Transactional
-    public void register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+    public AuthResponse register(RegisterRequest request) {
+        boolean hasEmail = request.getEmail() != null && !request.getEmail().isBlank();
+        boolean hasPhone = request.getPhone() != null && !request.getPhone().isBlank();
+
+        if (!hasEmail && !hasPhone) {
+            throw new BadRequestException("Email or phone number is required");
+        }
+
+        if (hasEmail && userRepository.existsByEmail(request.getEmail())) {
             throw new BadRequestException("Email already in use");
         }
-        if (userRepository.existsByPhone(request.getPhone())) {
+        if (hasPhone && userRepository.existsByPhone(request.getPhone())) {
             throw new BadRequestException("Phone number already in use");
         }
 
         User user = User.builder()
-                .email(request.getEmail())
+                .email(hasEmail ? request.getEmail() : null)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
-                .phone(request.getPhone())
+                .phone(hasPhone ? request.getPhone() : null)
                 .role(Role.USER)
-                .verified(false)
+                .verified(true)
                 .build();
 
         userRepository.save(user);
-        otpService.generateAndSend(request.getPhone());
-    }
 
-    /**
-     * Verifies the OTP, activates the account, and returns a JWT token.
-     */
-    @Transactional
-    public AuthResponse verifyOtp(VerifyOtpRequest request) {
-        otpService.validateOtp(request.getPhone(), request.getOtpCode());
-
-        User user = userRepository.findByPhone(request.getPhone())
-                .orElseThrow(() -> new BadRequestException("Invalid or expired OTP"));
-
-        user.setVerified(true);
-        userRepository.save(user);
-
-        otpService.clearOtp(request.getPhone());
-
-        // Build principal and generate JWT without re-authenticating (no password needed)
         UserPrincipal principal = new UserPrincipal(
                 user.getId(),
                 user.getEmail(),

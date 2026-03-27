@@ -14,8 +14,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class RegisterRequest {
 
-    @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
+    @Size(max = 255, message = "Email must not exceed 255 characters")
     private String email;
 
     @NotBlank(message = "Password is required")
@@ -26,7 +26,6 @@ public class RegisterRequest {
     @Size(max = 255, message = "Full name must not exceed 255 characters")
     private String fullName;
 
-    @NotBlank(message = "Phone number is required")
     @Size(max = 20, message = "Phone must not exceed 20 characters")
     private String phone;
 }
