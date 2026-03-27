@@ -300,10 +300,10 @@ jobs:
             docker compose -f docker-compose.prod.yml down || true
             docker compose -f docker-compose.prod.yml up -d
 
-            # Health check — chờ tối đa 90 giây
+            # Health check — chờ tối đa 3 phút
             echo "🔍 Running health check..."
             HEALTH_URL="http://localhost:8080/api/v1/health"
-            MAX_RETRIES=18
+            MAX_RETRIES=36
             RETRY_INTERVAL=5
 
             for i in $(seq 1 $MAX_RETRIES); do
@@ -317,6 +317,10 @@ jobs:
               fi
               sleep $RETRY_INTERVAL
             done
+
+            # In log trước khi rollback để debug
+            echo "📋 App logs before rollback:"
+            docker compose -f docker-compose.prod.yml logs app --tail=50
 
             # Health check fail → rollback
             echo "❌ Health check failed! Rolling back..."
