@@ -169,13 +169,7 @@ jobs:
             SUPER_ADMIN_PHONE=${{ secrets.SUPER_ADMIN_PHONE }}
             EOF
 
-            mkdir -p nginx/ssl
-            if [ ! -f nginx/ssl/fullchain.pem ]; then
-              openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-                -keyout nginx/ssl/privkey.pem -out nginx/ssl/fullchain.pem \
-                -subj "/CN=${{ secrets.STAGING_EC2_HOST }}" \
-                -addext "subjectAltName=IP:${{ secrets.STAGING_EC2_HOST }}"
-            fi
+            mkdir -p /var/www/certbot
 
             docker pull ${{ env.DOCKER_IMAGE }}:latest
             docker compose -f docker-compose.prod.yml down || true
@@ -279,13 +273,7 @@ jobs:
             SUPER_ADMIN_PHONE=${{ secrets.SUPER_ADMIN_PHONE }}
             EOF
 
-            mkdir -p nginx/ssl
-            if [ ! -f nginx/ssl/fullchain.pem ]; then
-              openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-                -keyout nginx/ssl/privkey.pem -out nginx/ssl/fullchain.pem \
-                -subj "/CN=${{ secrets.EC2_HOST }}" \
-                -addext "subjectAltName=IP:${{ secrets.EC2_HOST }}"
-            fi
+            mkdir -p /var/www/certbot
 
             # Backup image hiện tại để rollback
             echo "📦 Backing up current image..."
