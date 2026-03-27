@@ -52,7 +52,7 @@ public class Category {
      * Null cho phép với danh mục chỉ dùng làm nhóm (root node không cho đăng tin).
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "detail_type", length = 30)
+    @Column(name = "detail_type", columnDefinition = "VARCHAR(30)")
     private CategoryDetailType detailType;
 
     @Column(name = "is_active", nullable = false)
