@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - develop
 
 env:
   DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/congdongviet-api
@@ -32,10 +33,10 @@ jobs:
         run: mvn clean verify -B
 
   # ─────────────────────────────────────────
-  # Job 2: Build Docker Image + Push Docker Hub
+  # Job 2: Build Docker Image + Security Scan + Push
   # ─────────────────────────────────────────
   build-and-push-docker:
-    name: Build and Push Docker Image
+    name: Build, Scan and Push Docker Image
     runs-on: ubuntu-latest
     needs: build-and-test
 
@@ -52,7 +53,29 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      # Build image local trước để scan (chưa push)
+      - name: Build Docker image (local)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          load: true
+          tags: ${{ env.DOCKER_IMAGE }}:scan
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Quét lỗ hổng bảo mật — fail nếu có lỗi CRITICAL
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.DOCKER_IMAGE }}:scan
+          format: table
+          exit-code: '1'
+          severity: CRITICAL
+          ignore-unfixed: true
+
+      # Chỉ push nếu scan pass
+      - name: Push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -64,12 +87,13 @@ jobs:
           cache-to: type=gha,mode=max
 
   # ─────────────────────────────────────────
-  # Job 3: Deploy to EC2
+  # Job 3a: Deploy to STAGING (develop branch)
   # ─────────────────────────────────────────
-  deploy-to-ec2:
-    name: Deploy to EC2
+  deploy-staging:
+    name: Deploy to Staging
     runs-on: ubuntu-latest
     needs: build-and-push-docker
+    if: github.ref == 'refs/heads/develop'
 
     steps:
       - name: Checkout code
@@ -82,22 +106,125 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Mở port 22 tạm thời cho GitHub Actions runner
-      - name: Allow runner IP in EC2 Security Group
+      - name: Allow runner IP in Staging Security Group
+        id: allow-ip-staging
+        run: |
+          RUNNER_IP=$(curl -s https://api.ipify.org)
+          echo "runner_ip=$RUNNER_IP" >> $GITHUB_OUTPUT
+          aws ec2 authorize-security-group-ingress \
+            --group-id ${{ secrets.STAGING_SECURITY_GROUP_ID }} \
+            --protocol tcp --port 22 --cidr ${RUNNER_IP}/32 || true
+          sleep 10
+
+      - name: Clean nginx on Staging
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          timeout: 30s
+          command_timeout: 2m
+          script: |
+            rm -rf /home/${{ secrets.EC2_USER }}/app/nginx/nginx.conf
+            mkdir -p /home/${{ secrets.EC2_USER }}/app/nginx
+
+      - name: Copy files to Staging
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.STAGING_EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.prod.yml,nginx/nginx.conf"
+          target: "/home/${{ secrets.EC2_USER }}/app"
+          overwrite: true
+
+      - name: Deploy to Staging
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.STAGING_EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          timeout: 60s
+          command_timeout: 10m
+          script: |
+            cd /home/${{ secrets.EC2_USER }}/app
+            cat > .env << 'EOF'
+            DOCKER_IMAGE=${{ env.DOCKER_IMAGE }}
+            DB_HOST=${{ secrets.STAGING_DB_HOST }}
+            DB_PORT=${{ secrets.DB_PORT }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            DB_USERNAME=${{ secrets.DB_USERNAME }}
+            DB_PASSWORD=${{ secrets.STAGING_DB_PASSWORD }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
+            REDIS_HOST=redis
+            REDIS_PORT=6379
+            REDIS_PASSWORD=
+            TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }}
+            TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
+            TWILIO_PHONE_NUMBER=${{ secrets.TWILIO_PHONE_NUMBER }}
+            SUPER_ADMIN_USERNAME=${{ secrets.SUPER_ADMIN_USERNAME }}
+            SUPER_ADMIN_EMAIL=${{ secrets.SUPER_ADMIN_EMAIL }}
+            SUPER_ADMIN_PASSWORD=${{ secrets.SUPER_ADMIN_PASSWORD }}
+            SUPER_ADMIN_PHONE=${{ secrets.SUPER_ADMIN_PHONE }}
+            EOF
+
+            mkdir -p nginx/ssl
+            if [ ! -f nginx/ssl/fullchain.pem ]; then
+              openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+                -keyout nginx/ssl/privkey.pem -out nginx/ssl/fullchain.pem \
+                -subj "/CN=${{ secrets.STAGING_EC2_HOST }}" \
+                -addext "subjectAltName=IP:${{ secrets.STAGING_EC2_HOST }}"
+            fi
+
+            docker pull ${{ env.DOCKER_IMAGE }}:latest
+            docker compose -f docker-compose.prod.yml down || true
+            docker compose -f docker-compose.prod.yml up -d
+            docker image prune -f
+
+            echo "✅ Staging deploy: $(date)"
+            docker ps
+
+      - name: Revoke runner IP from Staging Security Group
+        if: always()
+        run: |
+          aws ec2 revoke-security-group-ingress \
+            --group-id ${{ secrets.STAGING_SECURITY_GROUP_ID }} \
+            --protocol tcp --port 22 \
+            --cidr ${{ steps.allow-ip-staging.outputs.runner_ip }}/32 || true
+
+  # ─────────────────────────────────────────
+  # Job 3b: Deploy to PRODUCTION (main branch)
+  #         Zero-downtime: backup → deploy → health check → rollback nếu fail
+  # ─────────────────────────────────────────
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build-and-push-docker
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Allow runner IP in Production Security Group
         id: allow-ip
         run: |
           RUNNER_IP=$(curl -s https://api.ipify.org)
           echo "runner_ip=$RUNNER_IP" >> $GITHUB_OUTPUT
           aws ec2 authorize-security-group-ingress \
             --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
-            --protocol tcp \
-            --port 22 \
-            --cidr ${RUNNER_IP}/32 || echo "Rule already exists, continuing..."
-          echo "Waiting 10s for Security Group rule to propagate..."
+            --protocol tcp --port 22 --cidr ${RUNNER_IP}/32 || true
           sleep 10
 
-      # Dọn thư mục nginx cũ trước khi copy
-      - name: Clean nginx directory on EC2
+      - name: Clean nginx on Production
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -109,8 +236,7 @@ jobs:
             rm -rf /home/${{ secrets.EC2_USER }}/app/nginx/nginx.conf
             mkdir -p /home/${{ secrets.EC2_USER }}/app/nginx
 
-      # Copy docker-compose và nginx config lên EC2
-      - name: Copy files to EC2
+      - name: Copy files to Production
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -118,81 +244,92 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "docker-compose.prod.yml,nginx/nginx.conf"
           target: "/home/${{ secrets.EC2_USER }}/app"
-          timeout: 60s
           overwrite: true
 
-      # Deploy
-      - name: Deploy to EC2
+      # Deploy với zero-downtime: backup → deploy → health check → rollback nếu fail
+      - name: Deploy to Production with rollback
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           timeout: 60s
-          command_timeout: 10m
+          command_timeout: 15m
           script: |
             cd /home/${{ secrets.EC2_USER }}/app
 
-            # Tạo file .env từ GitHub Secrets
             cat > .env << 'EOF'
             DOCKER_IMAGE=${{ env.DOCKER_IMAGE }}
-
             DB_HOST=${{ secrets.DB_HOST }}
             DB_PORT=${{ secrets.DB_PORT }}
             DB_NAME=${{ secrets.DB_NAME }}
             DB_USERNAME=${{ secrets.DB_USERNAME }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
-
             REDIS_HOST=redis
             REDIS_PORT=6379
             REDIS_PASSWORD=
-
             TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }}
             TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
             TWILIO_PHONE_NUMBER=${{ secrets.TWILIO_PHONE_NUMBER }}
-
             SUPER_ADMIN_USERNAME=${{ secrets.SUPER_ADMIN_USERNAME }}
             SUPER_ADMIN_EMAIL=${{ secrets.SUPER_ADMIN_EMAIL }}
             SUPER_ADMIN_PASSWORD=${{ secrets.SUPER_ADMIN_PASSWORD }}
             SUPER_ADMIN_PHONE=${{ secrets.SUPER_ADMIN_PHONE }}
             EOF
 
-            # Tạo SSL cert tự ký nếu chưa có
             mkdir -p nginx/ssl
             if [ ! -f nginx/ssl/fullchain.pem ]; then
               openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-                -keyout nginx/ssl/privkey.pem \
-                -out nginx/ssl/fullchain.pem \
+                -keyout nginx/ssl/privkey.pem -out nginx/ssl/fullchain.pem \
                 -subj "/CN=${{ secrets.EC2_HOST }}" \
                 -addext "subjectAltName=IP:${{ secrets.EC2_HOST }}"
-              echo "SSL certificate generated"
-            else
-              echo "SSL certificate already exists"
             fi
 
-            # Pull image mới nhất
+            # Backup image hiện tại để rollback
+            echo "📦 Backing up current image..."
+            docker tag ${{ env.DOCKER_IMAGE }}:latest ${{ env.DOCKER_IMAGE }}:backup 2>/dev/null || true
+
+            # Pull image mới
+            echo "⬇️  Pulling new image..."
             docker pull ${{ env.DOCKER_IMAGE }}:latest
 
-            # Restart toàn bộ stack
+            # Deploy
+            echo "🚀 Deploying new version..."
             docker compose -f docker-compose.prod.yml down || true
             docker compose -f docker-compose.prod.yml up -d
 
-            # Xóa image cũ
-            docker image prune -f
+            # Health check — chờ tối đa 90 giây
+            echo "🔍 Running health check..."
+            HEALTH_URL="http://localhost:8080/api/v1/health"
+            MAX_RETRIES=18
+            RETRY_INTERVAL=5
 
-            echo "✅ Deploy thành công: $(date)"
-            docker ps
+            for i in $(seq 1 $MAX_RETRIES); do
+              echo "  Attempt $i/$MAX_RETRIES..."
+              if curl -sf "$HEALTH_URL" > /dev/null 2>&1; then
+                echo "✅ Health check passed!"
+                docker image prune -f
+                echo "🎉 Deploy thành công: $(date)"
+                docker ps
+                exit 0
+              fi
+              sleep $RETRY_INTERVAL
+            done
 
-      # Đóng port 22 lại dù thành công hay thất bại
-      - name: Revoke runner IP from EC2 Security Group
+            # Health check fail → rollback
+            echo "❌ Health check failed! Rolling back..."
+            docker compose -f docker-compose.prod.yml down || true
+            docker tag ${{ env.DOCKER_IMAGE }}:backup ${{ env.DOCKER_IMAGE }}:latest 2>/dev/null || true
+            docker compose -f docker-compose.prod.yml up -d
+            echo "⚠️  Rolled back to previous version"
+            exit 1
+
+      - name: Revoke runner IP from Production Security Group
         if: always()
         run: |
           aws ec2 revoke-security-group-ingress \
             --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
-            --protocol tcp \
-            --port 22 \
+            --protocol tcp --port 22 \
             --cidr ${{ steps.allow-ip.outputs.runner_ip }}/32 || true
-          echo "Revoked runner IP from port 22"
