@@ -238,6 +238,330 @@
 			]
 		},
 		{
+			"name": "Categories",
+			"item": [
+				{
+					"name": "Get All Categories (Tree)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/categories",
+							"host": ["{{baseUrl}}"],
+							"path": ["categories"]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Category Tree",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"OK\",\n    \"data\": [\n        {\n            \"id\": \"...\",\n            \"code\": \"REAL_ESTATE_RENT\",\n            \"name\": \"Cho thuê bất động sản\",\n            \"detailType\": null,\n            \"active\": true,\n            \"sortOrder\": 1,\n            \"children\": [\n                {\n                    \"id\": \"...\",\n                    \"code\": \"HOUSE_RENT\",\n                    \"name\": \"Cho thuê nhà\",\n                    \"detailType\": \"REAL_ESTATE\",\n                    \"active\": true,\n                    \"sortOrder\": 1,\n                    \"children\": []\n                },\n                {\n                    \"id\": \"...\",\n                    \"code\": \"ROOM_RENT\",\n                    \"name\": \"Cho thuê phòng\",\n                    \"detailType\": \"REAL_ESTATE\",\n                    \"active\": true,\n                    \"sortOrder\": 2,\n                    \"children\": []\n                }\n            ]\n        },\n        {\n            \"id\": \"...\",\n            \"code\": \"CAR_SALE\",\n            \"name\": \"Mua bán ô tô\",\n            \"detailType\": \"CAR\",\n            \"active\": true,\n            \"sortOrder\": 3,\n            \"children\": []\n        }\n    ]\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Listings",
+			"item": [
+				{
+					"name": "Create Listing - Real Estate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.id) {",
+									"        pm.collectionVariables.set('listingId', jsonData.data.id);",
+									"        console.log('Listing ID saved:', jsonData.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"categoryCode\": \"HOUSE_RENT\",\n    \"title\": \"Cho thuê nhà 3 phòng ngủ quận 1\",\n    \"description\": \"Nhà mới, đầy đủ nội thất, gần trung tâm\",\n    \"price\": 15000000,\n    \"priceUnit\": \"MONTHLY\",\n    \"realEstateDetails\": {\n        \"city\": \"Hồ Chí Minh\",\n        \"district\": \"Quận 1\",\n        \"address\": \"123 Nguyễn Huệ\",\n        \"areaSqm\": 80.5,\n        \"bedrooms\": 3,\n        \"bathrooms\": 2,\n        \"floors\": 3,\n        \"furnished\": true,\n        \"availableFrom\": \"2026-04-01\",\n        \"deposit\": 30000000\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/listings",
+							"host": ["{{baseUrl}}"],
+							"path": ["listings"]
+						}
+					},
+					"response": [
+						{
+							"name": "201 - Created",
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"Listing created successfully\",\n    \"data\": {\n        \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"categoryCode\": \"HOUSE_RENT\",\n        \"categoryName\": \"Cho thuê nhà\",\n        \"title\": \"Cho thuê nhà 3 phòng ngủ quận 1\",\n        \"description\": \"Nhà mới, đầy đủ nội thất, gần trung tâm\",\n        \"price\": 15000000,\n        \"priceUnit\": \"MONTHLY\",\n        \"status\": \"ACTIVE\",\n        \"imageUrls\": [],\n        \"coverImageUrl\": null,\n        \"realEstateDetails\": {\n            \"city\": \"Hồ Chí Minh\",\n            \"district\": \"Quận 1\",\n            \"address\": \"123 Nguyễn Huệ\",\n            \"areaSqm\": 80.5,\n            \"bedrooms\": 3,\n            \"bathrooms\": 2,\n            \"floors\": 3,\n            \"furnished\": true,\n            \"availableFrom\": \"2026-04-01\",\n            \"deposit\": 30000000\n        },\n        \"carDetails\": null,\n        \"createdAt\": \"2026-03-27T10:00:00\"\n    }\n}"
+						},
+						{
+							"name": "400 - Invalid Category",
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Invalid category: HOUSE_RENT\"\n}"
+						},
+						{
+							"name": "401 - Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Unauthorized\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Create Listing - Car",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.id) {",
+									"        pm.collectionVariables.set('listingId', jsonData.data.id);",
+									"        console.log('Listing ID saved:', jsonData.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"categoryCode\": \"CAR_SALE\",\n    \"title\": \"Toyota Camry 2022 - Ít đi, mới 95%\",\n    \"description\": \"Xe cá nhân sử dụng, bảo dưỡng định kỳ\",\n    \"price\": 950000000,\n    \"priceUnit\": \"TOTAL\",\n    \"carDetails\": {\n        \"brand\": \"Toyota\",\n        \"model\": \"Camry\",\n        \"manufactureYear\": 2022,\n        \"mileageKm\": 25000,\n        \"fuelType\": \"GASOLINE\",\n        \"transmission\": \"AUTOMATIC\",\n        \"color\": \"Trắng ngọc trai\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/listings",
+							"host": ["{{baseUrl}}"],
+							"path": ["listings"]
+						}
+					},
+					"response": [
+						{
+							"name": "201 - Created",
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"Listing created successfully\",\n    \"data\": {\n        \"id\": \"660e8400-e29b-41d4-a716-446655440001\",\n        \"categoryCode\": \"CAR_SALE\",\n        \"categoryName\": \"Mua bán ô tô\",\n        \"title\": \"Toyota Camry 2022 - Ít đi, mới 95%\",\n        \"description\": \"Xe cá nhân sử dụng, bảo dưỡng định kỳ\",\n        \"price\": 950000000,\n        \"priceUnit\": \"TOTAL\",\n        \"status\": \"ACTIVE\",\n        \"imageUrls\": [],\n        \"coverImageUrl\": null,\n        \"realEstateDetails\": null,\n        \"carDetails\": {\n            \"brand\": \"Toyota\",\n            \"model\": \"Camry\",\n            \"manufactureYear\": 2022,\n            \"mileageKm\": 25000,\n            \"fuelType\": \"GASOLINE\",\n            \"transmission\": \"AUTOMATIC\",\n            \"color\": \"Trắng ngọc trai\"\n        },\n        \"createdAt\": \"2026-03-27T10:00:00\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Listing by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/listings/{{listingId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["listings", "{{listingId}}"]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - OK",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"OK\",\n    \"data\": {\n        \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"categoryCode\": \"HOUSE_RENT\",\n        \"categoryName\": \"Cho thuê nhà\",\n        \"title\": \"Cho thuê nhà 3 phòng ngủ quận 1\",\n        \"description\": \"Nhà mới, đầy đủ nội thất, gần trung tâm\",\n        \"price\": 15000000,\n        \"priceUnit\": \"MONTHLY\",\n        \"status\": \"ACTIVE\",\n        \"imageUrls\": [],\n        \"coverImageUrl\": null,\n        \"realEstateDetails\": {\n            \"city\": \"Hồ Chí Minh\",\n            \"district\": \"Quận 1\",\n            \"address\": \"123 Nguyễn Huệ\",\n            \"areaSqm\": 80.5,\n            \"bedrooms\": 3,\n            \"bathrooms\": 2,\n            \"floors\": 3,\n            \"furnished\": true,\n            \"availableFrom\": \"2026-04-01\",\n            \"deposit\": 30000000\n        },\n        \"carDetails\": null,\n        \"createdAt\": \"2026-03-27T10:00:00\"\n    }\n}"
+						},
+						{
+							"name": "404 - Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Listing not found with id: 550e8400-e29b-41d4-a716-446655440000\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Listings by Category",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/listings?categoryCode=HOUSE_RENT&page=0&size=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["listings"],
+							"query": [
+								{
+									"key": "categoryCode",
+									"value": "HOUSE_RENT"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Paginated List",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"OK\",\n    \"data\": {\n        \"content\": [\n            {\n                \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n                \"categoryCode\": \"HOUSE_RENT\",\n                \"categoryName\": \"Cho thuê nhà\",\n                \"title\": \"Cho thuê nhà 3 phòng ngủ quận 1\",\n                \"price\": 15000000,\n                \"priceUnit\": \"MONTHLY\",\n                \"status\": \"ACTIVE\",\n                \"coverImageUrl\": null,\n                \"createdAt\": \"2026-03-27T10:00:00\"\n            }\n        ],\n        \"totalElements\": 1,\n        \"totalPages\": 1,\n        \"size\": 20,\n        \"number\": 0\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Featured Listings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/listings?featured=true&page=0&size=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["listings"],
+							"query": [
+								{ "key": "featured", "value": "true" },
+								{ "key": "page", "value": "0" },
+								{ "key": "size", "value": "10" }
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Featured Listings",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"OK\",\n    \"data\": {\n        \"content\": [\n            {\n                \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n                \"categoryCode\": \"HOUSE_RENT\",\n                \"categoryName\": \"Cho thuê nhà\",\n                \"title\": \"Cho thuê nhà 3 phòng ngủ quận 1\",\n                \"price\": 15000000,\n                \"priceUnit\": \"MONTHLY\",\n                \"status\": \"ACTIVE\",\n                \"featured\": true,\n                \"coverImageUrl\": null,\n                \"createdAt\": \"2026-03-27T10:00:00\"\n            }\n        ],\n        \"totalElements\": 1,\n        \"totalPages\": 1,\n        \"size\": 10,\n        \"number\": 0\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Listing Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"INACTIVE\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/listings/{{listingId}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["listings", "{{listingId}}", "status"]
+						},
+						"description": "Owner chỉ có thể cập nhật status của bài đăng của mình. Các giá trị: ACTIVE | INACTIVE | SOLD | RENTED"
+					},
+					"response": [
+						{
+							"name": "200 - Status Updated",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"Status updated\",\n    \"data\": null\n}"
+						},
+						{
+							"name": "400 - Not Owner",
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"You are not the owner of this listing\"\n}"
+						},
+						{
+							"name": "401 - Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Unauthorized\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Set Listing Featured (Admin)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"featured\": true\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/listings/{{listingId}}/featured",
+							"host": ["{{baseUrl}}"],
+							"path": ["listings", "{{listingId}}", "featured"]
+						},
+						"description": "Chỉ ADMIN hoặc SUPER_ADMIN mới có quyền bật/tắt nổi bật. Body: {\"featured\": true/false}"
+					},
+					"response": [
+						{
+							"name": "200 - Featured Updated",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"Featured status updated\",\n    \"data\": null\n}"
+						},
+						{
+							"name": "403 - Forbidden (not Admin)",
+							"status": "Forbidden",
+							"code": 403,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Access denied\"\n}"
+						},
+						{
+							"name": "404 - Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Listing not found with id: ...\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
 			"name": "Admin",
 			"item": [
 				{

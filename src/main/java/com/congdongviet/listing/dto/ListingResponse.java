@@ -20,6 +20,7 @@ public class ListingResponse {
     private BigDecimal price;
     private String priceUnit;
     private String status;
+    private boolean featured;
     private List<String> imageUrls;
     private String coverImageUrl;
     private LocalDateTime createdAt;
