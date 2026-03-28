@@ -15,6 +15,11 @@
 			"key": "token",
 			"value": "",
 			"type": "string"
+		},
+		{
+			"key": "listingId",
+			"value": "",
+			"type": "string"
 		}
 	],
 	"item": [
@@ -233,7 +238,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"categoryCode\": \"HOUSE_RENT\",\n    \"title\": \"Cho thuê nhà 3 phòng ngủ quận 1\",\n    \"description\": \"Nhà mới, đầy đủ nội thất, gần trung tâm\",\n    \"price\": 15000000,\n    \"priceUnit\": \"MONTH\",\n    \"realEstate\": {\n        \"city\": \"Hồ Chí Minh\",\n        \"district\": \"Quận 1\",\n        \"areaSqm\": 80.5,\n        \"bedrooms\": 3,\n        \"bathrooms\": 2,\n        \"floors\": 3,\n        \"isFurnished\": true,\n        \"availableFrom\": \"2026-04-01\",\n        \"deposit\": 30000000\n    }\n}"
+							"raw": "{\n    \"categoryCode\": \"HOUSE_RENT\",\n    \"title\": \"Cho thuê nhà 3 phòng ngủ quận 1\",\n    \"description\": \"Nhà mới, đầy đủ nội thất, gần trung tâm\",\n    \"price\": 15000000,\n    \"priceUnit\": \"MONTHLY\",\n    \"realEstateDetails\": {\n        \"city\": \"Hồ Chí Minh\",\n        \"district\": \"Quận 1\",\n        \"address\": \"123 Nguyễn Huệ\",\n        \"areaSqm\": 80.5,\n        \"bedrooms\": 3,\n        \"bathrooms\": 2,\n        \"floors\": 3,\n        \"furnished\": true,\n        \"availableFrom\": \"2026-04-01\",\n        \"deposit\": 30000000\n    }\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/listings",
@@ -247,7 +252,14 @@
 							"status": "Created",
 							"code": 201,
 							"_postman_previewlanguage": "json",
-							"body": "{\n    \"success\": true,\n    \"message\": \"Listing created successfully\",\n    \"data\": {\n        \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"categoryCode\": \"HOUSE_RENT\",\n        \"categoryName\": \"Cho thuê nhà\",\n        \"title\": \"Cho thuê nhà 3 phòng ngủ quận 1\",\n        \"price\": 15000000,\n        \"priceUnit\": \"MONTH\",\n        \"status\": \"ACTIVE\",\n        \"realEstate\": {\n            \"city\": \"Hồ Chí Minh\",\n            \"district\": \"Quận 1\",\n            \"areaSqm\": 80.5,\n            \"bedrooms\": 3,\n            \"bathrooms\": 2\n        },\n        \"createdAt\": \"2026-03-27T10:00:00\"\n    }\n}"
+							"body": "{\n    \"success\": true,\n    \"message\": \"Listing created successfully\",\n    \"data\": {\n        \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"categoryCode\": \"HOUSE_RENT\",\n        \"categoryName\": \"Cho thuê nhà\",\n        \"title\": \"Cho thuê nhà 3 phòng ngủ quận 1\",\n        \"description\": \"Nhà mới, đầy đủ nội thất, gần trung tâm\",\n        \"price\": 15000000,\n        \"priceUnit\": \"MONTHLY\",\n        \"status\": \"ACTIVE\",\n        \"imageUrls\": [],\n        \"coverImageUrl\": null,\n        \"realEstateDetails\": {\n            \"city\": \"Hồ Chí Minh\",\n            \"district\": \"Quận 1\",\n            \"address\": \"123 Nguyễn Huệ\",\n            \"areaSqm\": 80.5,\n            \"bedrooms\": 3,\n            \"bathrooms\": 2,\n            \"floors\": 3,\n            \"furnished\": true,\n            \"availableFrom\": \"2026-04-01\",\n            \"deposit\": 30000000\n        },\n        \"carDetails\": null,\n        \"createdAt\": \"2026-03-27T10:00:00\"\n    }\n}"
+						},
+						{
+							"name": "400 - Invalid Category",
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Invalid category: HOUSE_RENT\"\n}"
 						},
 						{
 							"name": "401 - Unauthorized",
@@ -260,6 +272,23 @@
 				},
 				{
 					"name": "Create Listing - Car",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.id) {",
+									"        pm.collectionVariables.set('listingId', jsonData.data.id);",
+									"        console.log('Listing ID saved:', jsonData.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [
@@ -274,7 +303,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"categoryCode\": \"CAR_SALE\",\n    \"title\": \"Toyota Camry 2022 - Ít đi, mới 95%\",\n    \"description\": \"Xe cá nhân sử dụng, bảo dưỡng định kỳ\",\n    \"price\": 950000000,\n    \"priceUnit\": \"TOTAL\",\n    \"car\": {\n        \"brand\": \"Toyota\",\n        \"model\": \"Camry\",\n        \"manufactureYear\": 2022,\n        \"mileageKm\": 25000,\n        \"fuelType\": \"GASOLINE\",\n        \"transmission\": \"AUTOMATIC\",\n        \"color\": \"Trắng ngọc trai\"\n    }\n}"
+							"raw": "{\n    \"categoryCode\": \"CAR_SALE\",\n    \"title\": \"Toyota Camry 2022 - Ít đi, mới 95%\",\n    \"description\": \"Xe cá nhân sử dụng, bảo dưỡng định kỳ\",\n    \"price\": 950000000,\n    \"priceUnit\": \"TOTAL\",\n    \"carDetails\": {\n        \"brand\": \"Toyota\",\n        \"model\": \"Camry\",\n        \"manufactureYear\": 2022,\n        \"mileageKm\": 25000,\n        \"fuelType\": \"GASOLINE\",\n        \"transmission\": \"AUTOMATIC\",\n        \"color\": \"Trắng ngọc trai\"\n    }\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/listings",
@@ -282,7 +311,15 @@
 							"path": ["listings"]
 						}
 					},
-					"response": []
+					"response": [
+						{
+							"name": "201 - Created",
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"Listing created successfully\",\n    \"data\": {\n        \"id\": \"660e8400-e29b-41d4-a716-446655440001\",\n        \"categoryCode\": \"CAR_SALE\",\n        \"categoryName\": \"Mua bán ô tô\",\n        \"title\": \"Toyota Camry 2022 - Ít đi, mới 95%\",\n        \"description\": \"Xe cá nhân sử dụng, bảo dưỡng định kỳ\",\n        \"price\": 950000000,\n        \"priceUnit\": \"TOTAL\",\n        \"status\": \"ACTIVE\",\n        \"imageUrls\": [],\n        \"coverImageUrl\": null,\n        \"realEstateDetails\": null,\n        \"carDetails\": {\n            \"brand\": \"Toyota\",\n            \"model\": \"Camry\",\n            \"manufactureYear\": 2022,\n            \"mileageKm\": 25000,\n            \"fuelType\": \"GASOLINE\",\n            \"transmission\": \"AUTOMATIC\",\n            \"color\": \"Trắng ngọc trai\"\n        },\n        \"createdAt\": \"2026-03-27T10:00:00\"\n    }\n}"
+						}
+					]
 				},
 				{
 					"name": "Get Listing by ID",
@@ -295,7 +332,22 @@
 							"path": ["listings", "{{listingId}}"]
 						}
 					},
-					"response": []
+					"response": [
+						{
+							"name": "200 - OK",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"OK\",\n    \"data\": {\n        \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"categoryCode\": \"HOUSE_RENT\",\n        \"categoryName\": \"Cho thuê nhà\",\n        \"title\": \"Cho thuê nhà 3 phòng ngủ quận 1\",\n        \"description\": \"Nhà mới, đầy đủ nội thất, gần trung tâm\",\n        \"price\": 15000000,\n        \"priceUnit\": \"MONTHLY\",\n        \"status\": \"ACTIVE\",\n        \"imageUrls\": [],\n        \"coverImageUrl\": null,\n        \"realEstateDetails\": {\n            \"city\": \"Hồ Chí Minh\",\n            \"district\": \"Quận 1\",\n            \"address\": \"123 Nguyễn Huệ\",\n            \"areaSqm\": 80.5,\n            \"bedrooms\": 3,\n            \"bathrooms\": 2,\n            \"floors\": 3,\n            \"furnished\": true,\n            \"availableFrom\": \"2026-04-01\",\n            \"deposit\": 30000000\n        },\n        \"carDetails\": null,\n        \"createdAt\": \"2026-03-27T10:00:00\"\n    }\n}"
+						},
+						{
+							"name": "404 - Not Found",
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Listing not found with id: 550e8400-e29b-41d4-a716-446655440000\"\n}"
+						}
+					]
 				},
 				{
 					"name": "Get Listings by Category",
@@ -322,7 +374,15 @@
 							]
 						}
 					},
-					"response": []
+					"response": [
+						{
+							"name": "200 - Paginated List",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"OK\",\n    \"data\": {\n        \"content\": [\n            {\n                \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n                \"categoryCode\": \"HOUSE_RENT\",\n                \"categoryName\": \"Cho thuê nhà\",\n                \"title\": \"Cho thuê nhà 3 phòng ngủ quận 1\",\n                \"price\": 15000000,\n                \"priceUnit\": \"MONTHLY\",\n                \"status\": \"ACTIVE\",\n                \"coverImageUrl\": null,\n                \"createdAt\": \"2026-03-27T10:00:00\"\n            }\n        ],\n        \"totalElements\": 1,\n        \"totalPages\": 1,\n        \"size\": 20,\n        \"number\": 0\n    }\n}"
+						}
+					]
 				},
 				{
 					"name": "Update Listing Status",
@@ -347,7 +407,29 @@
 							]
 						}
 					},
-					"response": []
+					"response": [
+						{
+							"name": "200 - Status Updated",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"Status updated\",\n    \"data\": null\n}"
+						},
+						{
+							"name": "400 - Not Owner",
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"You are not the owner of this listing\"\n}"
+						},
+						{
+							"name": "401 - Unauthorized",
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Unauthorized\"\n}"
+						}
+					]
 				}
 			]
 		},
@@ -401,7 +483,7 @@
 							"status": "Created",
 							"code": 201,
 							"_postman_previewlanguage": "json",
-							"body": "{\n    \"success\": true,\n    \"message\": \"Admin account created successfully\",\n    \"data\": {\n        \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"username\": \"admin01\",\n        \"email\": \"admin@example.com\",\n        \"fullName\": \"Nguyen Van B\",\n        \"role\": \"ADMIN\",\n        \"createdAt\": \"2026-03-27T10:00:00\"\n    }\n}"
+							"body": "{\n    \"success\": true,\n    \"message\": \"Admin account created successfully\",\n    \"data\": {\n        \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"username\": \"admin01\",\n        \"email\": \"admin@example.com\",\n        \"fullName\": \"Nguyen Van B\",\n        \"phone\": \"+84909876543\",\n        \"role\": \"ADMIN\",\n        \"createdBy\": \"superadmin\",\n        \"createdAt\": \"2026-03-27T10:00:00\"\n    }\n}"
 						},
 						{
 							"name": "403 - Forbidden (not SUPER_ADMIN)",
