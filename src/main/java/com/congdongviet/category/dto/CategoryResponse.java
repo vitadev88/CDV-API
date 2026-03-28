@@ -14,6 +14,7 @@ public class CategoryResponse {
     private String code;
     private String name;
     private String detailType;
+    private boolean active;
     private int sortOrder;
     private List<CategoryResponse> children;
 }
