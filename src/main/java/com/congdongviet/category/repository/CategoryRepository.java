@@ -13,7 +13,13 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
 
     Optional<Category> findByCode(String code);
 
+    boolean existsByCode(String code);
+
+    boolean existsByCodeAndIdNot(String code, UUID id);
+
     List<Category> findByParentIsNullAndActiveTrue();
 
     List<Category> findByParentIdAndActiveTrue(UUID parentId);
+
+    boolean existsByParentId(UUID parentId);
 }
