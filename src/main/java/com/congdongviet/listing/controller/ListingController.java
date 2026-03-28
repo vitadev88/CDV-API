@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -50,12 +51,19 @@ public class ListingController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<ListingResponse>>> getByCategory(
-            @RequestParam String categoryCode,
+    public ResponseEntity<ApiResponse<Page<ListingResponse>>> getListings(
+            @RequestParam(required = false) String categoryCode,
+            @RequestParam(required = false) Boolean featured,
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
 
-        return ResponseEntity.ok(
-                ApiResponse.success(listingService.getByCategoryCode(categoryCode, pageable), "OK"));
+        if (Boolean.TRUE.equals(featured)) {
+            return ResponseEntity.ok(ApiResponse.success(listingService.getFeatured(pageable), "OK"));
+        }
+        if (categoryCode != null && !categoryCode.isBlank()) {
+            return ResponseEntity.ok(
+                    ApiResponse.success(listingService.getByCategoryCode(categoryCode, pageable), "OK"));
+        }
+        return ResponseEntity.ok(ApiResponse.success(listingService.getAll(pageable), "OK"));
     }
 
     /** Chủ tin cập nhật trạng thái: INACTIVE, SOLD, RENTED */
@@ -63,10 +71,23 @@ public class ListingController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> updateStatus(
             @PathVariable UUID id,
-            @RequestParam ListingStatus status,
+            @RequestBody Map<String, String> body,
             @AuthenticationPrincipal UserPrincipal currentUser) {
 
+        ListingStatus status = ListingStatus.valueOf(body.get("status"));
         listingService.updateStatus(id, status, currentUser);
         return ResponseEntity.ok(ApiResponse.success(null, "Status updated"));
+    }
+
+    /** Admin: bật/tắt nổi bật cho bài đăng */
+    @PatchMapping("/{id}/featured")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> setFeatured(
+            @PathVariable UUID id,
+            @RequestBody Map<String, Boolean> body) {
+
+        boolean featured = Boolean.TRUE.equals(body.get("featured"));
+        listingService.setFeatured(id, featured);
+        return ResponseEntity.ok(ApiResponse.success(null, "Featured status updated"));
     }
 }

@@ -56,6 +56,10 @@ public class Listing extends BaseEntity {
     @Builder.Default
     private ListingStatus status = ListingStatus.ACTIVE;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean featured = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
