@@ -95,6 +95,11 @@ public class ListingService {
     }
 
     @Transactional(readOnly = true)
+    public Page<ListingResponse> getAll(Pageable pageable) {
+        return listingRepository.findByStatus(ListingStatus.ACTIVE, pageable).map(this::toResponse);
+    }
+
+    @Transactional(readOnly = true)
     public Page<ListingResponse> getByCategoryCode(String categoryCode, Pageable pageable) {
         Category category = categoryRepository.findByCode(categoryCode)
                 .orElseThrow(() -> new BadRequestException("Invalid category: " + categoryCode));
@@ -114,6 +119,20 @@ public class ListingService {
 
         listing.setStatus(newStatus);
         listingRepository.save(listing);
+    }
+
+    @Transactional
+    public void setFeatured(UUID listingId, boolean featured) {
+        Listing listing = listingRepository.findById(listingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Listing", "id", listingId));
+        listing.setFeatured(featured);
+        listingRepository.save(listing);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ListingResponse> getFeatured(Pageable pageable) {
+        return listingRepository.findByFeaturedAndStatus(true, ListingStatus.ACTIVE, pageable)
+                .map(this::toResponse);
     }
 
     private ListingResponse toResponse(Listing listing) {
@@ -137,6 +156,7 @@ public class ListingService {
                 .price(listing.getPrice())
                 .priceUnit(listing.getPriceUnit().name())
                 .status(listing.getStatus().name())
+                .featured(listing.isFeatured())
                 .imageUrls(imageUrls)
                 .coverImageUrl(coverUrl)
                 .createdAt(listing.getCreatedAt());

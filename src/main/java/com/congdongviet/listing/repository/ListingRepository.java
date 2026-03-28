@@ -15,5 +15,9 @@ public interface ListingRepository extends JpaRepository<Listing, UUID>, JpaSpec
 
     Page<Listing> findByCategoryIdAndStatus(UUID categoryId, ListingStatus status, Pageable pageable);
 
+    Page<Listing> findByStatus(ListingStatus status, Pageable pageable);
+
     Page<Listing> findByCreatedByIdAndStatus(UUID userId, ListingStatus status, Pageable pageable);
+
+    Page<Listing> findByFeaturedAndStatus(boolean featured, ListingStatus status, Pageable pageable);
 }
