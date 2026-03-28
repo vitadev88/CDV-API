@@ -15,7 +15,6 @@ import com.congdongviet.listing.entity.PriceUnit;
 import com.congdongviet.listing.handler.ListingDetailHandler;
 import com.congdongviet.listing.repository.ListingRepository;
 import com.congdongviet.security.UserPrincipal;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,7 +27,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class ListingService {
 
     private final ListingRepository listingRepository;

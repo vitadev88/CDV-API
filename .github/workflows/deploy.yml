@@ -125,7 +125,7 @@ jobs:
           timeout: 30s
           command_timeout: 2m
           script: |
-            rm -rf /home/${{ secrets.EC2_USER }}/app/nginx/nginx.conf
+            rm -rf /home/${{ secrets.EC2_USER }}/app/nginx
             mkdir -p /home/${{ secrets.EC2_USER }}/app/nginx
 
       - name: Copy files to Staging
@@ -169,13 +169,7 @@ jobs:
             SUPER_ADMIN_PHONE=${{ secrets.SUPER_ADMIN_PHONE }}
             EOF
 
-            mkdir -p nginx/ssl
-            if [ ! -f nginx/ssl/fullchain.pem ]; then
-              openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-                -keyout nginx/ssl/privkey.pem -out nginx/ssl/fullchain.pem \
-                -subj "/CN=${{ secrets.STAGING_EC2_HOST }}" \
-                -addext "subjectAltName=IP:${{ secrets.STAGING_EC2_HOST }}"
-            fi
+            mkdir -p /var/www/certbot
 
             docker pull ${{ env.DOCKER_IMAGE }}:latest
             docker compose -f docker-compose.prod.yml down || true
@@ -233,7 +227,7 @@ jobs:
           timeout: 30s
           command_timeout: 2m
           script: |
-            rm -rf /home/${{ secrets.EC2_USER }}/app/nginx/nginx.conf
+            rm -rf /home/${{ secrets.EC2_USER }}/app/nginx
             mkdir -p /home/${{ secrets.EC2_USER }}/app/nginx
 
       - name: Copy files to Production
@@ -279,13 +273,7 @@ jobs:
             SUPER_ADMIN_PHONE=${{ secrets.SUPER_ADMIN_PHONE }}
             EOF
 
-            mkdir -p nginx/ssl
-            if [ ! -f nginx/ssl/fullchain.pem ]; then
-              openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-                -keyout nginx/ssl/privkey.pem -out nginx/ssl/fullchain.pem \
-                -subj "/CN=${{ secrets.EC2_HOST }}" \
-                -addext "subjectAltName=IP:${{ secrets.EC2_HOST }}"
-            fi
+            mkdir -p /var/www/certbot
 
             # Backup image hiện tại để rollback
             echo "📦 Backing up current image..."
@@ -300,15 +288,15 @@ jobs:
             docker compose -f docker-compose.prod.yml down || true
             docker compose -f docker-compose.prod.yml up -d
 
-            # Health check — chờ tối đa 90 giây
+            # Health check — chờ tối đa 3 phút
             echo "🔍 Running health check..."
             HEALTH_URL="http://localhost:8080/api/v1/health"
-            MAX_RETRIES=18
+            MAX_RETRIES=36
             RETRY_INTERVAL=5
 
             for i in $(seq 1 $MAX_RETRIES); do
               echo "  Attempt $i/$MAX_RETRIES..."
-              if curl -sf "$HEALTH_URL" > /dev/null 2>&1; then
+              if docker exec app-app-1 curl -sf "$HEALTH_URL" > /dev/null 2>&1; then
                 echo "✅ Health check passed!"
                 docker image prune -f
                 echo "🎉 Deploy thành công: $(date)"
@@ -317,6 +305,10 @@ jobs:
               fi
               sleep $RETRY_INTERVAL
             done
+
+            # In log trước khi rollback để debug
+            echo "📋 App logs before rollback:"
+            docker compose -f docker-compose.prod.yml logs app --tail=50
 
             # Health check fail → rollback
             echo "❌ Health check failed! Rolling back..."
