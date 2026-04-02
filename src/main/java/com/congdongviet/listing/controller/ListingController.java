@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,16 +55,29 @@ public class ListingController {
     public ResponseEntity<ApiResponse<Page<ListingResponse>>> getListings(
             @RequestParam(required = false) String categoryCode,
             @RequestParam(required = false) Boolean featured,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) java.math.BigDecimal minPrice,
+            @RequestParam(required = false) java.math.BigDecimal maxPrice,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) Double minArea,
+            @RequestParam(required = false) Double maxArea,
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
 
         if (Boolean.TRUE.equals(featured)) {
             return ResponseEntity.ok(ApiResponse.success(listingService.getFeatured(pageable), "OK"));
         }
-        if (categoryCode != null && !categoryCode.isBlank()) {
-            return ResponseEntity.ok(
-                    ApiResponse.success(listingService.getByCategoryCode(categoryCode, pageable), "OK"));
-        }
-        return ResponseEntity.ok(ApiResponse.success(listingService.getAll(pageable), "OK"));
+        return ResponseEntity.ok(ApiResponse.success(
+                listingService.search(categoryCode, keyword, minPrice, maxPrice, city, minArea, maxArea, pageable), "OK"));
+    }
+
+    /** Lấy danh sách tin đăng của người dùng hiện tại */
+    @GetMapping("/mine")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Page<ListingResponse>>> getMyListings(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @PageableDefault(size = 50) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(
+                listingService.getMyListings(currentUser.getId(), pageable), "OK"));
     }
 
     /** Chủ tin cập nhật trạng thái: INACTIVE, SOLD, RENTED */
@@ -89,5 +103,26 @@ public class ListingController {
         boolean featured = Boolean.TRUE.equals(body.get("featured"));
         listingService.setFeatured(id, featured);
         return ResponseEntity.ok(ApiResponse.success(null, "Featured status updated"));
+    }
+
+    /** Admin: lấy tất cả listing mọi trạng thái */
+    @GetMapping("/admin")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Page<ListingResponse>>> getAllAdmin(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String categoryCode,
+            @RequestParam(required = false) Boolean featured,
+            @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(
+                listingService.getAllAdmin(keyword, status, categoryCode, featured, pageable), "OK"));
+    }
+
+    /** Admin: xoá cứng listing */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
+        listingService.delete(id);
+        return ResponseEntity.ok(ApiResponse.success(null, "Listing deleted"));
     }
 }

@@ -23,6 +23,8 @@ public class ListingResponse {
     private boolean featured;
     private List<String> imageUrls;
     private String coverImageUrl;
+    private UUID createdById;
+    private String createdByName;
     private LocalDateTime createdAt;
 
     /** Populated khi category detailType = REAL_ESTATE */
@@ -30,4 +32,13 @@ public class ListingResponse {
 
     /** Populated khi category detailType = CAR */
     private CarDetailResponse carDetails;
+
+    /** Populated khi category detailType = JOB */
+    private JobDetailResponse jobDetails;
+
+    /** Populated khi category detailType = SERVICE */
+    private ServiceDetailResponse serviceDetails;
+
+    /** Populated khi category detailType = GOODS */
+    private GoodsDetailResponse goodsDetails;
 }

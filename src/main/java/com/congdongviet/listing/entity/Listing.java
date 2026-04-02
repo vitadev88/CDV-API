@@ -70,6 +70,15 @@ public class Listing extends BaseEntity {
     @OneToOne(mappedBy = "listing", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private ListingCarDetail carDetail;
 
+    @OneToOne(mappedBy = "listing", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private ListingJobDetail jobDetail;
+
+    @OneToOne(mappedBy = "listing", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private ListingServiceDetail serviceDetail;
+
+    @OneToOne(mappedBy = "listing", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private ListingGoodsDetail goodsDetail;
+
     @OneToMany(mappedBy = "listing", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<ListingImage> images = new ArrayList<>();
