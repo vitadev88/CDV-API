@@ -271,6 +271,10 @@ jobs:
             SUPER_ADMIN_EMAIL=${{ secrets.SUPER_ADMIN_EMAIL }}
             SUPER_ADMIN_PASSWORD=${{ secrets.SUPER_ADMIN_PASSWORD }}
             SUPER_ADMIN_PHONE=${{ secrets.SUPER_ADMIN_PHONE }}
+            AWS_S3_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_S3_SECRET_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+            AWS_S3_REGION=${{ secrets.AWS_REGION }}
             EOF
 
             mkdir -p /var/www/certbot
