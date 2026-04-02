@@ -24,8 +24,8 @@
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <!-- Fix CVE-2025-24813: Tomcat RCE vulnerability -->
         <tomcat.version>10.1.35</tomcat.version>
-        <!-- Fix CVE-2024-38821: Spring Security Authorization Bypass -->
-        <spring-security.version>6.2.7</spring-security.version>
+        <!-- Fix CVE-2026-22732: Spring Security policy bypass and information disclosure -->
+        <spring-security.version>6.5.9</spring-security.version>
     </properties>
 
     <dependencies>
