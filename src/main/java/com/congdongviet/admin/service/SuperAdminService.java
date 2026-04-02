@@ -47,6 +47,7 @@ public class SuperAdminService {
         try {
             User superAdmin = User.builder()
                     .username(username)
+                    .fullName(properties.getFullName())
                     .email(properties.getEmail())
                     .password(passwordEncoder.encode(properties.getPassword()))
                     .phone(properties.getPhone())

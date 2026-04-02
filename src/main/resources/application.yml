@@ -49,6 +49,7 @@ twilio:
 app:
   super-admin:
     username: ${SUPER_ADMIN_USERNAME}
+    full-name: ${SUPER_ADMIN_FULL_NAME:Super Admin}
     email: ${SUPER_ADMIN_EMAIL}
     password: ${SUPER_ADMIN_PASSWORD}
     phone: ${SUPER_ADMIN_PHONE}

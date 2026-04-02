@@ -13,6 +13,8 @@ public class SuperAdminProperties {
 
     private String username;
 
+    private String fullName;
+
     private String email;
 
     /** Raw password from ENV — used once at bootstrap, never logged or stored in plain text. */

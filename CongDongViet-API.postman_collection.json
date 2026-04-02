@@ -33,8 +33,12 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/health",
-							"host": ["{{baseUrl}}"],
-							"path": ["health"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
 						}
 					},
 					"response": []
@@ -78,8 +82,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/auth/register",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "register"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
 						}
 					},
 					"response": [
@@ -146,8 +155,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/auth/verify-otp",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "verify-otp"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"verify-otp"
+							]
 						}
 					},
 					"response": [
@@ -207,8 +221,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/auth/login",
-							"host": ["{{baseUrl}}"],
-							"path": ["auth", "login"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
 						}
 					},
 					"response": [
@@ -238,6 +257,161 @@
 			]
 		},
 		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get All Users (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users?keyword=&page=0&size=20&sort=createdAt,desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							],
+							"query": [
+								{
+									"key": "keyword",
+									"value": "",
+									"description": "Search by name/email/phone"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								},
+								{
+									"key": "sort",
+									"value": "createdAt,desc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fullName\": \"Nguyen Van B\",\n    \"email\": \"newmail@example.com\",\n    \"phone\": \"+84912345678\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change User Role (Super Admin)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"role\": \"ADMIN\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/{{userId}}/role",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{userId}}",
+								"role"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User (Super Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Categories",
 			"item": [
 				{
@@ -247,8 +421,12 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/categories",
-							"host": ["{{baseUrl}}"],
-							"path": ["categories"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories"
+							]
 						}
 					},
 					"response": [
@@ -258,6 +436,154 @@
 							"code": 200,
 							"_postman_previewlanguage": "json",
 							"body": "{\n    \"success\": true,\n    \"message\": \"OK\",\n    \"data\": [\n        {\n            \"id\": \"...\",\n            \"code\": \"REAL_ESTATE_RENT\",\n            \"name\": \"Cho thuê bất động sản\",\n            \"detailType\": null,\n            \"active\": true,\n            \"sortOrder\": 1,\n            \"children\": [\n                {\n                    \"id\": \"...\",\n                    \"code\": \"HOUSE_RENT\",\n                    \"name\": \"Cho thuê nhà\",\n                    \"detailType\": \"REAL_ESTATE\",\n                    \"active\": true,\n                    \"sortOrder\": 1,\n                    \"children\": []\n                },\n                {\n                    \"id\": \"...\",\n                    \"code\": \"ROOM_RENT\",\n                    \"name\": \"Cho thuê phòng\",\n                    \"detailType\": \"REAL_ESTATE\",\n                    \"active\": true,\n                    \"sortOrder\": 2,\n                    \"children\": []\n                }\n            ]\n        },\n        {\n            \"id\": \"...\",\n            \"code\": \"CAR_SALE\",\n            \"name\": \"Mua bán ô tô\",\n            \"detailType\": \"CAR\",\n            \"active\": true,\n            \"sortOrder\": 3,\n            \"children\": []\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Category by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/categories/{{categoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories",
+								"{{categoryId}}"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Category",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"OK\",\n    \"data\": {\n        \"id\": \"...\",\n        \"code\": \"HOUSE_RENT\",\n        \"name\": \"Cho thuê nhà\",\n        \"detailType\": \"REAL_ESTATE\",\n        \"active\": true,\n        \"sortOrder\": 1,\n        \"children\": []\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Create Category (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"APARTMENT_RENT\",\n    \"name\": \"Cho thuê căn hộ\",\n    \"parentId\": null,\n    \"detailType\": \"REAL_ESTATE\",\n    \"sortOrder\": 5\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "201 - Created",
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"Category created successfully\",\n    \"data\": {\n        \"id\": \"...\",\n        \"code\": \"APARTMENT_RENT\",\n        \"name\": \"Cho thuê căn hộ\",\n        \"detailType\": \"REAL_ESTATE\",\n        \"active\": true,\n        \"sortOrder\": 5,\n        \"children\": []\n    }\n}"
+						},
+						{
+							"name": "400 - Code Already Exists",
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Category code already exists: APARTMENT_RENT\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Category (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Cho thuê căn hộ chung cư\",\n    \"sortOrder\": 3,\n    \"active\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/categories/{{categoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories",
+								"{{categoryId}}"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Updated",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"Category updated successfully\",\n    \"data\": {\n        \"id\": \"...\",\n        \"code\": \"APARTMENT_RENT\",\n        \"name\": \"Cho thuê căn hộ chung cư\",\n        \"detailType\": \"REAL_ESTATE\",\n        \"active\": true,\n        \"sortOrder\": 3,\n        \"children\": []\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Category (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/categories/{{categoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categories",
+								"{{categoryId}}"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "200 - Deleted",
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": true,\n    \"message\": \"Category deleted successfully\",\n    \"data\": null\n}"
+						},
+						{
+							"name": "400 - Has Children",
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"body": "{\n    \"success\": false,\n    \"message\": \"Cannot delete category that has child categories\"\n}"
 						}
 					]
 				}
@@ -303,8 +629,12 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/listings",
-							"host": ["{{baseUrl}}"],
-							"path": ["listings"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"listings"
+							]
 						}
 					},
 					"response": [
@@ -368,8 +698,12 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/listings",
-							"host": ["{{baseUrl}}"],
-							"path": ["listings"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"listings"
+							]
 						}
 					},
 					"response": [
@@ -389,8 +723,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/listings/{{listingId}}",
-							"host": ["{{baseUrl}}"],
-							"path": ["listings", "{{listingId}}"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"listings",
+								"{{listingId}}"
+							]
 						}
 					},
 					"response": [
@@ -417,8 +756,12 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/listings?categoryCode=HOUSE_RENT&page=0&size=20",
-							"host": ["{{baseUrl}}"],
-							"path": ["listings"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"listings"
+							],
 							"query": [
 								{
 									"key": "categoryCode",
@@ -452,12 +795,25 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/listings?featured=true&page=0&size=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["listings"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"listings"
+							],
 							"query": [
-								{ "key": "featured", "value": "true" },
-								{ "key": "page", "value": "0" },
-								{ "key": "size", "value": "10" }
+								{
+									"key": "featured",
+									"value": "true"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
 							]
 						}
 					},
@@ -476,18 +832,34 @@
 					"request": {
 						"method": "PATCH",
 						"header": [
-							{ "key": "Content-Type", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{token}}" }
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
 						],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n    \"status\": \"INACTIVE\"\n}",
-							"options": { "raw": { "language": "json" } }
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
 							"raw": "{{baseUrl}}/listings/{{listingId}}/status",
-							"host": ["{{baseUrl}}"],
-							"path": ["listings", "{{listingId}}", "status"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"listings",
+								"{{listingId}}",
+								"status"
+							]
 						},
 						"description": "Owner chỉ có thể cập nhật status của bài đăng của mình. Các giá trị: ACTIVE | INACTIVE | SOLD | RENTED"
 					},
@@ -520,18 +892,34 @@
 					"request": {
 						"method": "PATCH",
 						"header": [
-							{ "key": "Content-Type", "value": "application/json" },
-							{ "key": "Authorization", "value": "Bearer {{token}}" }
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
 						],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n    \"featured\": true\n}",
-							"options": { "raw": { "language": "json" } }
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
 						},
 						"url": {
 							"raw": "{{baseUrl}}/listings/{{listingId}}/featured",
-							"host": ["{{baseUrl}}"],
-							"path": ["listings", "{{listingId}}", "featured"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"listings",
+								"{{listingId}}",
+								"featured"
+							]
 						},
 						"description": "Chỉ ADMIN hoặc SUPER_ADMIN mới có quyền bật/tắt nổi bật. Body: {\"featured\": true/false}"
 					},
@@ -601,8 +989,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/admin/accounts",
-							"host": ["{{baseUrl}}"],
-							"path": ["admin", "accounts"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"accounts"
+							]
 						}
 					},
 					"response": [
