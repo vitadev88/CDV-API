@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Getter
 @Setter
@@ -33,11 +34,26 @@ public class CreateListingRequest {
     @NotBlank(message = "Price unit is required")
     private String priceUnit;
 
+    /** Danh sách URL ảnh (upload trước qua POST /api/v1/uploads). Ảnh đầu tiên là ảnh bìa. */
+    private List<String> imageUrls;
+
     /** Điền nếu categoryCode thuộc nhóm BĐS */
     @Valid
     private RealEstateDetailRequest realEstateDetails;
 
-    /** Điền nếu categoryCode là CAR_SALE */
+    /** Điền nếu categoryCode thuộc nhóm xe cộ */
     @Valid
     private CarDetailRequest carDetails;
+
+    /** Điền nếu categoryCode thuộc nhóm việc làm */
+    @Valid
+    private JobDetailRequest jobDetails;
+
+    /** Điền nếu categoryCode thuộc nhóm dịch vụ */
+    @Valid
+    private ServiceDetailRequest serviceDetails;
+
+    /** Điền nếu categoryCode thuộc nhóm mua bán đồ dùng */
+    @Valid
+    private GoodsDetailRequest goodsDetails;
 }

@@ -1,6 +1,5 @@
 package com.congdongviet.listing.handler;
 
-import com.congdongviet.category.entity.CategoryDetailType;
 import com.congdongviet.listing.dto.CreateListingRequest;
 import com.congdongviet.listing.dto.ListingResponse;
 import com.congdongviet.listing.entity.Listing;
@@ -12,15 +11,15 @@ import com.congdongviet.listing.entity.Listing;
  *   1. Tạo migration: bảng listing_xxx_details
  *   2. Tạo entity ListingXxxDetail
  *   3. Tạo DTO XxxDetailRequest + XxxDetailResponse
- *   4. Implement ListingDetailHandler mới
- *   5. Thêm danh mục vào DB (qua migration seed)
+ *   4. Implement ListingDetailHandler mới với supports() trả về code tương ứng
+ *   5. Thêm loại danh mục vào DB qua API /category-detail-types
  *
  * Không cần sửa ListingService hay bất kỳ code hiện có nào.
  */
 public interface ListingDetailHandler {
 
-    /** Handler này xử lý category có detailType tương ứng */
-    CategoryDetailType supports();
+    /** Trả về code của detailType mà handler này xử lý, ví dụ: "REAL_ESTATE", "CAR" */
+    String supports();
 
     /** Lưu detail vào DB sau khi listing đã được save */
     void saveDetail(Listing listing, CreateListingRequest request);

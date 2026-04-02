@@ -35,6 +35,13 @@ public class CategoryController {
         return ResponseEntity.ok(ApiResponse.success(categoryService.getTree(), "OK"));
     }
 
+    /** Admin only — lấy toàn bộ cây danh mục kể cả inactive */
+    @GetMapping("/all")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> getAllTree() {
+        return ResponseEntity.ok(ApiResponse.success(categoryService.getAllTree(), "OK"));
+    }
+
     /** Public — lấy thông tin 1 category theo id */
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<CategoryResponse>> getById(@PathVariable UUID id) {

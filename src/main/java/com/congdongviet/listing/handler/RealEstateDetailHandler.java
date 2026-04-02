@@ -1,6 +1,5 @@
 package com.congdongviet.listing.handler;
 
-import com.congdongviet.category.entity.CategoryDetailType;
 import com.congdongviet.common.exception.BadRequestException;
 import com.congdongviet.listing.dto.CreateListingRequest;
 import com.congdongviet.listing.dto.ListingResponse;
@@ -19,8 +18,8 @@ public class RealEstateDetailHandler implements ListingDetailHandler {
     private final ListingRealEstateDetailRepository repository;
 
     @Override
-    public CategoryDetailType supports() {
-        return CategoryDetailType.REAL_ESTATE;
+    public String supports() {
+        return "REAL_ESTATE";
     }
 
     @Override

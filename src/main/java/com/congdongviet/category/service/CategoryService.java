@@ -5,6 +5,7 @@ import com.congdongviet.category.dto.CreateCategoryRequest;
 import com.congdongviet.category.dto.UpdateCategoryRequest;
 import com.congdongviet.category.entity.Category;
 import com.congdongviet.category.entity.CategoryDetailType;
+import com.congdongviet.category.repository.CategoryDetailTypeRepository;
 import com.congdongviet.category.repository.CategoryRepository;
 import com.congdongviet.common.exception.BadRequestException;
 import com.congdongviet.common.exception.ResourceNotFoundException;
@@ -20,12 +21,21 @@ import java.util.UUID;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final CategoryDetailTypeRepository detailTypeRepository;
 
     /** Public: trả về cây danh mục đang active */
     public List<CategoryResponse> getTree() {
-        return categoryRepository.findByParentIsNullAndActiveTrue()
+        return categoryRepository.findByParentIsNullAndActiveTrueOrderBySortOrderAsc()
                 .stream()
                 .map(this::toResponse)
+                .toList();
+    }
+
+    /** Admin: trả về toàn bộ cây danh mục (kể cả inactive) */
+    public List<CategoryResponse> getAllTree() {
+        return categoryRepository.findByParentIsNullOrderBySortOrderAsc()
+                .stream()
+                .map(this::toResponseAll)
                 .toList();
     }
 
@@ -50,14 +60,14 @@ public class CategoryService {
                     .orElseThrow(() -> new ResourceNotFoundException("Category", "id", request.getParentId()));
         }
 
-        CategoryDetailType detailType = parseDetailType(request.getDetailType());
+        CategoryDetailType detailType = resolveDetailType(request.getDetailType());
 
         Category category = Category.builder()
                 .code(request.getCode().toUpperCase())
                 .name(request.getName())
                 .parent(parent)
                 .detailType(detailType)
-                .active(true)
+                .active(false)
                 .sortOrder(request.getSortOrder())
                 .build();
 
@@ -70,11 +80,21 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id));
 
+        if (request.getCode() != null && !request.getCode().isBlank()) {
+            String newCode = request.getCode().toUpperCase();
+            if (categoryRepository.existsByCodeAndIdNot(newCode, id)) {
+                throw new BadRequestException("Category code already exists: " + newCode);
+            }
+            category.setCode(newCode);
+        }
+
         if (request.getName() != null) {
             category.setName(request.getName());
         }
 
-        if (request.getParentId() != null) {
+        if (Boolean.TRUE.equals(request.getRemoveParent())) {
+            category.setParent(null);
+        } else if (request.getParentId() != null) {
             if (request.getParentId().equals(id)) {
                 throw new BadRequestException("Category cannot be its own parent");
             }
@@ -84,7 +104,11 @@ public class CategoryService {
         }
 
         if (request.getDetailType() != null) {
-            category.setDetailType(parseDetailType(request.getDetailType()));
+            if (request.getDetailType().isBlank()) {
+                category.setDetailType(null);
+            } else {
+                category.setDetailType(resolveDetailType(request.getDetailType()));
+            }
         }
 
         if (request.getActive() != null) {
@@ -98,41 +122,64 @@ public class CategoryService {
         return toResponse(categoryRepository.save(category));
     }
 
-    /** Admin: xoá mềm (set active = false) */
+    /** Admin: xoá mềm (set active = false) — cascade xuống danh mục con */
     @Transactional
     public void delete(UUID id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id));
 
-        if (categoryRepository.existsByParentId(id)) {
-            throw new BadRequestException("Cannot delete category that has child categories");
-        }
+        // Soft-delete tất cả con trước
+        categoryRepository.findByParentId(id).forEach(child -> {
+            child.setActive(false);
+            categoryRepository.save(child);
+        });
 
         category.setActive(false);
         categoryRepository.save(category);
     }
 
-    private CategoryDetailType parseDetailType(String value) {
-        if (value == null || value.isBlank()) return null;
-        try {
-            return CategoryDetailType.valueOf(value.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new BadRequestException("Invalid detailType: " + value);
-        }
+    /** Lookup detailType by code (case-insensitive). Null/blank → null. */
+    private CategoryDetailType resolveDetailType(String code) {
+        if (code == null || code.isBlank()) return null;
+        return detailTypeRepository.findByCode(code.toUpperCase())
+                .orElseThrow(() -> new BadRequestException("Invalid detailType: " + code));
     }
 
-    private CategoryResponse toResponse(Category category) {
+    private CategoryResponse toResponseAll(Category category) {
         List<CategoryResponse> children = categoryRepository
-                .findByParentIdAndActiveTrue(category.getId())
+                .findByParentIdOrderBySortOrderAsc(category.getId())
                 .stream()
-                .map(this::toResponse)
+                .map(this::toResponseAll)
                 .toList();
-
+        CategoryDetailType dt = category.getDetailType();
         return CategoryResponse.builder()
                 .id(category.getId())
                 .code(category.getCode())
                 .name(category.getName())
-                .detailType(category.getDetailType() != null ? category.getDetailType().name() : null)
+                .detailTypeId(dt != null ? dt.getId() : null)
+                .detailType(dt != null ? dt.getCode() : null)
+                .detailTypeName(dt != null ? dt.getName() : null)
+                .active(category.isActive())
+                .sortOrder(category.getSortOrder())
+                .children(children)
+                .build();
+    }
+
+    private CategoryResponse toResponse(Category category) {
+        List<CategoryResponse> children = categoryRepository
+                .findByParentIdAndActiveTrueOrderBySortOrderAsc(category.getId())
+                .stream()
+                .map(this::toResponse)
+                .toList();
+
+        CategoryDetailType dt = category.getDetailType();
+        return CategoryResponse.builder()
+                .id(category.getId())
+                .code(category.getCode())
+                .name(category.getName())
+                .detailTypeId(dt != null ? dt.getId() : null)
+                .detailType(dt != null ? dt.getCode() : null)
+                .detailTypeName(dt != null ? dt.getName() : null)
                 .active(category.isActive())
                 .sortOrder(category.getSortOrder())
                 .children(children)
