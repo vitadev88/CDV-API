@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-DOMAIN="congdongviet.duckdns.org"
+DOMAIN="api.congdongviet6368.com"
 EMAIL="stevewangdpc@gmail.com"
 COMPOSE_FILE="/home/ubuntu/app/docker-compose.prod.yml"
 NGINX_CONTAINER="app-nginx-1"
