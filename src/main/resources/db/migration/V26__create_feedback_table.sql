@@ -9,4 +9,4 @@ CREATE TABLE feedbacks (
     created_at  DATETIME(6)  NOT NULL,
     updated_at  DATETIME(6)  NULL,
     CONSTRAINT fk_feedback_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

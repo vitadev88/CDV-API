@@ -11,4 +11,4 @@ CREATE TABLE IF NOT EXISTS featured_promotions (
     CONSTRAINT fk_fpromo_listing FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE,
     CONSTRAINT fk_fpromo_package FOREIGN KEY (package_id) REFERENCES featured_packages(id) ON DELETE RESTRICT,
     CONSTRAINT fk_fpromo_user    FOREIGN KEY (user_id)    REFERENCES users(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
