@@ -9,6 +9,7 @@ import com.congdongviet.category.repository.CategoryDetailTypeRepository;
 import com.congdongviet.category.repository.CategoryRepository;
 import com.congdongviet.common.exception.BadRequestException;
 import com.congdongviet.common.exception.ResourceNotFoundException;
+import com.congdongviet.listing.repository.ListingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryDetailTypeRepository detailTypeRepository;
+    private final ListingRepository listingRepository;
 
     /** Public: trả về cây danh mục đang active */
     public List<CategoryResponse> getTree() {
@@ -122,20 +124,28 @@ public class CategoryService {
         return toResponse(categoryRepository.save(category));
     }
 
-    /** Admin: xoá mềm (set active = false) — cascade xuống danh mục con */
+    /** Admin: xoá cứng — xoá khỏi DB, báo lỗi nếu còn tin đăng */
     @Transactional
     public void delete(UUID id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id));
 
-        // Soft-delete tất cả con trước
-        categoryRepository.findByParentId(id).forEach(child -> {
-            child.setActive(false);
-            categoryRepository.save(child);
-        });
+        // Kiểm tra danh mục con
+        List<Category> children = categoryRepository.findByParentId(id);
+        for (Category child : children) {
+            if (listingRepository.existsByCategoryId(child.getId())) {
+                throw new BadRequestException("Danh mục con \"" + child.getName() + "\" còn tin đăng, không thể xóa");
+            }
+        }
 
-        category.setActive(false);
-        categoryRepository.save(category);
+        // Kiểm tra chính danh mục này
+        if (listingRepository.existsByCategoryId(id)) {
+            throw new BadRequestException("Danh mục \"" + category.getName() + "\" còn tin đăng, không thể xóa");
+        }
+
+        // Xóa con trước, rồi xóa cha
+        categoryRepository.deleteAll(children);
+        categoryRepository.delete(category);
     }
 
     /** Lookup detailType by code (case-insensitive). Null/blank → null. */

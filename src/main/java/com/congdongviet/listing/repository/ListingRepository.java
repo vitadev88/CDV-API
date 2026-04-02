@@ -32,6 +32,8 @@ public interface ListingRepository extends JpaRepository<Listing, UUID>, JpaSpec
 
     long countByFeaturedTrue();
 
+    boolean existsByCategoryId(UUID categoryId);
+
     /** [year, month, count] — số tin đăng theo tháng kể từ :since */
     @Query("SELECT FUNCTION('YEAR', l.createdAt), FUNCTION('MONTH', l.createdAt), COUNT(l) " +
            "FROM Listing l WHERE l.createdAt >= :since " +
