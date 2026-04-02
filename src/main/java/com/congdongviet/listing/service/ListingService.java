@@ -3,13 +3,13 @@ package com.congdongviet.listing.service;
 import com.congdongviet.auth.entity.User;
 import com.congdongviet.auth.repository.UserRepository;
 import com.congdongviet.category.entity.Category;
-import com.congdongviet.category.entity.CategoryDetailType;
 import com.congdongviet.category.repository.CategoryRepository;
 import com.congdongviet.common.exception.BadRequestException;
 import com.congdongviet.common.exception.ResourceNotFoundException;
 import com.congdongviet.listing.dto.CreateListingRequest;
 import com.congdongviet.listing.dto.ListingResponse;
 import com.congdongviet.listing.entity.Listing;
+import com.congdongviet.listing.entity.ListingImage;
 import com.congdongviet.listing.entity.ListingStatus;
 import com.congdongviet.listing.entity.PriceUnit;
 import com.congdongviet.listing.handler.ListingDetailHandler;
@@ -17,6 +17,7 @@ import com.congdongviet.listing.repository.ListingRepository;
 import com.congdongviet.security.UserPrincipal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,10 +35,10 @@ public class ListingService {
     private final UserRepository userRepository;
 
     /**
-     * Map từ CategoryDetailType → handler, được inject tự động qua Spring.
+     * Map từ detailType code → handler, được inject tự động qua Spring.
      * Khi thêm handler mới, Spring tự đăng ký — không cần sửa service này.
      */
-    private final Map<CategoryDetailType, ListingDetailHandler> handlers;
+    private final Map<String, ListingDetailHandler> handlers;
 
     public ListingService(ListingRepository listingRepository,
                           CategoryRepository categoryRepository,
@@ -77,7 +78,21 @@ public class ListingService {
 
         listingRepository.save(listing);
 
-        ListingDetailHandler handler = handlers.get(category.getDetailType());
+        // Lưu ảnh nếu có
+        if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
+            List<String> urls = request.getImageUrls();
+            for (int i = 0; i < urls.size(); i++) {
+                listing.getImages().add(ListingImage.builder()
+                        .listing(listing)
+                        .url(urls.get(i))
+                        .cover(i == 0)
+                        .sortOrder(i)
+                        .build());
+            }
+            listingRepository.save(listing);
+        }
+
+        ListingDetailHandler handler = handlers.get(category.getDetailType().getCode());
         if (handler != null) {
             handler.saveDetail(listing, request);
         }
@@ -104,6 +119,49 @@ public class ListingService {
         return listingRepository
                 .findByCategoryIdAndStatus(category.getId(), ListingStatus.ACTIVE, pageable)
                 .map(this::toResponse);
+    }
+
+    /** Tìm kiếm nâng cao với nhiều filter */
+    @Transactional(readOnly = true)
+    public Page<ListingResponse> search(String categoryCode, String keyword,
+                                         java.math.BigDecimal minPrice, java.math.BigDecimal maxPrice,
+                                         String city, Double minArea, Double maxArea,
+                                         Pageable pageable) {
+        Specification<Listing> spec = Specification.where(
+                (root, q, cb) -> cb.equal(root.get("status"), ListingStatus.ACTIVE));
+
+        if (categoryCode != null && !categoryCode.isBlank()) {
+            spec = spec.and((root, q, cb) ->
+                    cb.equal(root.join("category").get("code"), categoryCode.toUpperCase()));
+        }
+        if (keyword != null && !keyword.isBlank()) {
+            String kw = "%" + keyword.toLowerCase() + "%";
+            spec = spec.and((root, q, cb) -> cb.or(
+                    cb.like(cb.lower(root.get("title")), kw),
+                    cb.like(cb.lower(root.get("description")), kw)));
+        }
+        if (minPrice != null) {
+            spec = spec.and((root, q, cb) ->
+                    cb.greaterThanOrEqualTo(root.get("price"), minPrice));
+        }
+        if (maxPrice != null) {
+            spec = spec.and((root, q, cb) ->
+                    cb.lessThanOrEqualTo(root.get("price"), maxPrice));
+        }
+        if (city != null && !city.isBlank()) {
+            spec = spec.and((root, q, cb) ->
+                    cb.equal(cb.lower(root.join("realEstateDetail").get("city")), city.toLowerCase()));
+        }
+        if (minArea != null) {
+            spec = spec.and((root, q, cb) ->
+                    cb.greaterThanOrEqualTo(root.join("realEstateDetail").get("areaSqm"), minArea));
+        }
+        if (maxArea != null) {
+            spec = spec.and((root, q, cb) ->
+                    cb.lessThanOrEqualTo(root.join("realEstateDetail").get("areaSqm"), maxArea));
+        }
+
+        return listingRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
     @Transactional
@@ -133,6 +191,49 @@ public class ListingService {
                 .map(this::toResponse);
     }
 
+    /** Admin: lấy tất cả listing mọi trạng thái, hỗ trợ filter */
+    @Transactional(readOnly = true)
+    public Page<ListingResponse> getAllAdmin(String keyword, String status, String categoryCode, Boolean featured, Pageable pageable) {
+        Specification<Listing> spec = Specification.where(null);
+        if (keyword != null && !keyword.isBlank()) {
+            spec = spec.and((root, q, cb) ->
+                    cb.like(cb.lower(root.get("title")), "%" + keyword.toLowerCase() + "%"));
+        }
+        if (status != null && !status.isBlank()) {
+            spec = spec.and((root, q, cb) ->
+                    cb.equal(root.get("status"), ListingStatus.valueOf(status.toUpperCase())));
+        }
+        if (categoryCode != null && !categoryCode.isBlank()) {
+            spec = spec.and((root, q, cb) ->
+                    cb.equal(root.join("category").get("code"), categoryCode.toUpperCase()));
+        }
+        if (featured != null) {
+            spec = spec.and((root, q, cb) -> cb.equal(root.get("featured"), featured));
+        }
+        return listingRepository.findAll(spec, pageable).map(this::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ListingResponse> getMyListings(UUID userId, Pageable pageable) {
+        return listingRepository.findByCreatedByIdAndStatus(userId, ListingStatus.ACTIVE, pageable)
+                .map(this::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ListingResponse> getUserListings(UUID userId, Pageable pageable) {
+        return listingRepository.findByCreatedByIdAndStatus(userId, ListingStatus.ACTIVE, pageable)
+                .map(this::toResponse);
+    }
+
+    /** Admin: xoá cứng listing */
+    @Transactional
+    public void delete(UUID id) {
+        if (!listingRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Listing", "id", id);
+        }
+        listingRepository.deleteById(id);
+    }
+
     private ListingResponse toResponse(Listing listing) {
         List<String> imageUrls = listing.getImages().stream()
                 .sorted((a, b) -> Integer.compare(a.getSortOrder(), b.getSortOrder()))
@@ -157,11 +258,16 @@ public class ListingService {
                 .featured(listing.isFeatured())
                 .imageUrls(imageUrls)
                 .coverImageUrl(coverUrl)
+                .createdById(listing.getCreatedBy().getId())
+                .createdByName(listing.getCreatedBy().getFullName())
                 .createdAt(listing.getCreatedAt());
 
-        CategoryDetailType detailType = listing.getCategory().getDetailType();
-        if (detailType != null && handlers.containsKey(detailType)) {
-            handlers.get(detailType).populateResponse(listing, builder);
+        var detailType = listing.getCategory().getDetailType();
+        if (detailType != null) {
+            ListingDetailHandler handler = handlers.get(detailType.getCode());
+            if (handler != null) {
+                handler.populateResponse(listing, builder);
+            }
         }
 
         return builder.build();

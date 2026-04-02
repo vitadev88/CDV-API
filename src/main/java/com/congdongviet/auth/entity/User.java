@@ -12,6 +12,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -32,6 +34,30 @@ public class User extends BaseEntity {
 
     @Column(length = 20)
     private String phone;
+
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
+
+    @Column(length = 500)
+    private String bio;
+
+    @Column(length = 255)
+    private String address;
+
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
+
+    @Column(length = 100)
+    private String zalo;
+
+    @Column(name = "line_id", length = 100)
+    private String lineId;
+
+    @Column(length = 255)
+    private String facebook;
+
+    @Column(length = 255)
+    private String tiktok;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "VARCHAR(50)")

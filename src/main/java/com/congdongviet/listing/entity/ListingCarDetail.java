@@ -2,6 +2,8 @@ package com.congdongviet.listing.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
@@ -49,12 +51,14 @@ public class ListingCarDetail {
     private Integer mileageKm;
 
     /** GASOLINE | DIESEL | ELECTRIC | HYBRID */
+    @Enumerated(EnumType.STRING)
     @Column(name = "fuel_type", length = 20)
-    private String fuelType;
+    private FuelType fuelType;
 
     /** MANUAL | AUTOMATIC */
+    @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    private String transmission;
+    private Transmission transmission;
 
     @Column(length = 50)
     private String color;

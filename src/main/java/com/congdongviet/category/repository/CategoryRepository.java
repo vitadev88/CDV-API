@@ -17,9 +17,17 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
 
     boolean existsByCodeAndIdNot(String code, UUID id);
 
-    List<Category> findByParentIsNullAndActiveTrue();
+    List<Category> findByParentIsNullAndActiveTrueOrderBySortOrderAsc();
 
-    List<Category> findByParentIdAndActiveTrue(UUID parentId);
+    List<Category> findByParentIsNullOrderBySortOrderAsc();
+
+    List<Category> findByParentIdOrderBySortOrderAsc(UUID parentId);
+
+    List<Category> findByParentId(UUID parentId);
+
+    List<Category> findByParentIdAndActiveTrueOrderBySortOrderAsc(UUID parentId);
 
     boolean existsByParentId(UUID parentId);
+
+    long countByActiveTrue();
 }

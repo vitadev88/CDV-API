@@ -2,8 +2,6 @@ package com.congdongviet.category.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -51,9 +49,8 @@ public class Category {
      * Xác định bảng detail nào sẽ được populate khi tạo listing thuộc danh mục này.
      * Null cho phép với danh mục chỉ dùng làm nhóm (root node không cho đăng tin).
      */
-    @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.VARCHAR)
-    @Column(name = "detail_type", columnDefinition = "VARCHAR(30)")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "detail_type_id")
     private CategoryDetailType detailType;
 
     @Column(name = "is_active", nullable = false)

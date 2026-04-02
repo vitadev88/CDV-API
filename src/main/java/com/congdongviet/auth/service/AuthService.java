@@ -33,27 +33,29 @@ public class AuthService {
      * Registers a new user with either email or phone (at least one required).
      * Account is immediately active — no OTP verification needed.
      */
+
+    public boolean isUsernameAvailable(String username) {
+        return !userRepository.existsByUsername(username);
+    }
+
+    public boolean isPhoneAvailable(String phone) {
+        return !userRepository.existsByPhone(phone);
+    }
+
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        boolean hasEmail = request.getEmail() != null && !request.getEmail().isBlank();
-        boolean hasPhone = request.getPhone() != null && !request.getPhone().isBlank();
-
-        if (!hasEmail && !hasPhone) {
-            throw new BadRequestException("Email or phone number is required");
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new BadRequestException("Username already in use");
         }
-
-        if (hasEmail && userRepository.existsByEmail(request.getEmail())) {
-            throw new BadRequestException("Email already in use");
-        }
-        if (hasPhone && userRepository.existsByPhone(request.getPhone())) {
+        if (userRepository.existsByPhone(request.getPhone())) {
             throw new BadRequestException("Phone number already in use");
         }
 
         User user = User.builder()
-                .email(hasEmail ? request.getEmail() : null)
+                .username(request.getUsername())
+                .phone(request.getPhone())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .fullName(request.getFullName())
-                .phone(hasPhone ? request.getPhone() : null)
+                .fullName(request.getUsername())
                 .role(Role.USER)
                 .verified(true)
                 .build();
@@ -62,7 +64,7 @@ public class AuthService {
 
         UserPrincipal principal = new UserPrincipal(
                 user.getId(),
-                user.getEmail(),
+                user.getPhone(),
                 user.getPassword(),
                 List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())),
                 true
@@ -72,8 +74,10 @@ public class AuthService {
         return AuthResponse.builder()
                 .id(user.getId())
                 .token(token)
-                .email(user.getEmail())
+                .username(user.getUsername())
+                .phone(user.getPhone())
                 .fullName(user.getFullName())
+                .avatarUrl(user.getAvatarUrl())
                 .role(user.getRole().name())
                 .build();
     }
@@ -92,8 +96,11 @@ public class AuthService {
         return AuthResponse.builder()
                 .id(user.getId())
                 .token(token)
+                .username(user.getUsername())
+                .phone(user.getPhone())
                 .email(user.getEmail())
                 .fullName(user.getFullName())
+                .avatarUrl(user.getAvatarUrl())
                 .role(user.getRole().name())
                 .build();
     }

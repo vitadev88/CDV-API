@@ -13,14 +13,14 @@ import java.util.UUID;
 public class UserPrincipal implements UserDetails {
 
     private final UUID id;
-    private final String email;
+    private final String identifier;
     private final String password;
     private final Collection<? extends GrantedAuthority> authorities;
     private final boolean verified;
 
     @Override
     public String getUsername() {
-        return email;
+        return identifier;
     }
 
     @Override

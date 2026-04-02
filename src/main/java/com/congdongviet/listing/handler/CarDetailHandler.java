@@ -1,13 +1,14 @@
 package com.congdongviet.listing.handler;
 
-import com.congdongviet.category.entity.CategoryDetailType;
 import com.congdongviet.common.exception.BadRequestException;
 import com.congdongviet.listing.dto.CarDetailRequest;
 import com.congdongviet.listing.dto.CarDetailResponse;
 import com.congdongviet.listing.dto.CreateListingRequest;
 import com.congdongviet.listing.dto.ListingResponse;
+import com.congdongviet.listing.entity.FuelType;
 import com.congdongviet.listing.entity.Listing;
 import com.congdongviet.listing.entity.ListingCarDetail;
+import com.congdongviet.listing.entity.Transmission;
 import com.congdongviet.listing.repository.ListingCarDetailRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,8 +20,8 @@ public class CarDetailHandler implements ListingDetailHandler {
     private final ListingCarDetailRepository repository;
 
     @Override
-    public CategoryDetailType supports() {
-        return CategoryDetailType.CAR;
+    public String supports() {
+        return "CAR";
     }
 
     @Override
@@ -36,8 +37,8 @@ public class CarDetailHandler implements ListingDetailHandler {
                 .model(d.getModel())
                 .manufactureYear(d.getManufactureYear())
                 .mileageKm(d.getMileageKm())
-                .fuelType(d.getFuelType())
-                .transmission(d.getTransmission())
+                .fuelType(d.getFuelType() != null ? FuelType.valueOf(d.getFuelType()) : null)
+                .transmission(d.getTransmission() != null ? Transmission.valueOf(d.getTransmission()) : null)
                 .color(d.getColor())
                 .build();
 
@@ -54,8 +55,8 @@ public class CarDetailHandler implements ListingDetailHandler {
                 .model(d.getModel())
                 .manufactureYear(d.getManufactureYear())
                 .mileageKm(d.getMileageKm())
-                .fuelType(d.getFuelType())
-                .transmission(d.getTransmission())
+                .fuelType(d.getFuelType() != null ? d.getFuelType().name() : null)
+                .transmission(d.getTransmission() != null ? d.getTransmission().name() : null)
                 .color(d.getColor())
                 .build());
     }

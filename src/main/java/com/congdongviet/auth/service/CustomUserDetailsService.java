@@ -51,9 +51,12 @@ public class CustomUserDetailsService implements UserDetailsService {
         List<SimpleGrantedAuthority> authorities = List.of(
                 new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
         );
+        String identifier = user.getEmail() != null ? user.getEmail()
+                : user.getPhone() != null ? user.getPhone()
+                : user.getUsername();
         return new UserPrincipal(
                 user.getId(),
-                user.getEmail(),
+                identifier,
                 user.getPassword(),
                 authorities,
                 user.isVerified()
