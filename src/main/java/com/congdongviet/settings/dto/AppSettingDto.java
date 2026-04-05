@@ -12,4 +12,8 @@ import lombok.Setter;
 public class AppSettingDto {
     private boolean showFeatured;
     private boolean showFeaturedPackages;
+    private String logoUrl;
+    private String siteTitle;
+    private String siteDescription;
+    private boolean maintenanceMode;
 }
