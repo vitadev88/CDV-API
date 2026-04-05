@@ -15,7 +15,7 @@ public class AppSettingService {
 
     public AppSettingDto get() {
         AppSetting s = repository.findById(1L).orElseGet(AppSetting::new);
-        return new AppSettingDto(s.isShowFeatured(), s.isShowFeaturedPackages());
+        return toDto(s);
     }
 
     @Transactional
@@ -23,7 +23,22 @@ public class AppSettingService {
         AppSetting s = repository.findById(1L).orElseGet(AppSetting::new);
         s.setShowFeatured(dto.isShowFeatured());
         s.setShowFeaturedPackages(dto.isShowFeaturedPackages());
+        s.setLogoUrl(dto.getLogoUrl());
+        s.setSiteTitle(dto.getSiteTitle());
+        s.setSiteDescription(dto.getSiteDescription());
+        s.setMaintenanceMode(dto.isMaintenanceMode());
         repository.save(s);
-        return dto;
+        return toDto(s);
+    }
+
+    private AppSettingDto toDto(AppSetting s) {
+        return new AppSettingDto(
+                s.isShowFeatured(),
+                s.isShowFeaturedPackages(),
+                s.getLogoUrl(),
+                s.getSiteTitle(),
+                s.getSiteDescription(),
+                s.isMaintenanceMode()
+        );
     }
 }
