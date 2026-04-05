@@ -52,6 +52,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/featured-packages/active").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/blog/posts", "/api/v1/blog/posts/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/blog/categories").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/settings").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
