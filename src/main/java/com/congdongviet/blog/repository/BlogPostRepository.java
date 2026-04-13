@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -64,6 +65,12 @@ public interface BlogPostRepository extends JpaRepository<BlogPost, UUID> {
     @Modifying
     @Query("UPDATE BlogPost p SET p.viewCount = p.viewCount + 1 WHERE p.id = :id")
     void incrementViewCount(@Param("id") UUID id);
+
+    /** Finds SCHEDULED posts whose scheduledAt has passed — used by BlogScheduler. */
+    @EntityGraph(attributePaths = {"author", "category"})
+    @Query("SELECT p FROM BlogPost p WHERE p.status = :status AND p.scheduledAt <= :now")
+    List<BlogPost> findScheduledDue(@Param("status") BlogStatus status,
+                                    @Param("now") LocalDateTime now);
 
     // Admin: all statuses
     @EntityGraph(attributePaths = {"author", "category"})
