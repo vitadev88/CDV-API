@@ -140,6 +140,15 @@ public class BlogPostService {
 
         String slug = resolveSlug(req.getSlug(), req.getTitle(), null);
         BlogStatus status = parseStatus(req.getStatus());
+        LocalDateTime scheduledAt = parseScheduledAt(req.getScheduledAt());
+
+        // Guard: if SCHEDULED but date is missing or already past, publish immediately
+        if (status == BlogStatus.SCHEDULED) {
+            if (scheduledAt == null || scheduledAt.isBefore(LocalDateTime.now())) {
+                status = BlogStatus.PUBLISHED;
+                scheduledAt = null;
+            }
+        }
 
         BlogPost post = BlogPost.builder()
                 .title(req.getTitle())
@@ -153,6 +162,7 @@ public class BlogPostService {
                 .metaTitle(req.getMetaTitle())
                 .metaDescription(req.getMetaDescription())
                 .status(status)
+                .scheduledAt(status == BlogStatus.SCHEDULED ? scheduledAt : null)
                 .publishedAt(status == BlogStatus.PUBLISHED ? LocalDateTime.now() : null)
                 .build();
 
@@ -187,6 +197,19 @@ public class BlogPostService {
 
         if (req.getStatus() != null) {
             BlogStatus newStatus = parseStatus(req.getStatus());
+            LocalDateTime scheduledAt = parseScheduledAt(req.getScheduledAt());
+
+            if (newStatus == BlogStatus.SCHEDULED) {
+                if (scheduledAt == null || scheduledAt.isBefore(LocalDateTime.now())) {
+                    // Fallback: publish immediately if scheduled time is invalid/past
+                    newStatus = BlogStatus.PUBLISHED;
+                    scheduledAt = null;
+                }
+                post.setScheduledAt(scheduledAt);
+            } else {
+                post.setScheduledAt(null);
+            }
+
             if (newStatus == BlogStatus.PUBLISHED && post.getPublishedAt() == null) {
                 post.setPublishedAt(LocalDateTime.now());
             }
@@ -239,6 +262,12 @@ public class BlogPostService {
         if (status == null) return BlogStatus.DRAFT;
         try { return BlogStatus.valueOf(status.toUpperCase()); }
         catch (IllegalArgumentException e) { return BlogStatus.DRAFT; }
+    }
+
+    private LocalDateTime parseScheduledAt(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try { return LocalDateTime.parse(raw); }
+        catch (Exception e) { return null; }
     }
 
     private String buildExcerpt(String provided, String content) {

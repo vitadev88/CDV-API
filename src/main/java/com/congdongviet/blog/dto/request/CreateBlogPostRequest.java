@@ -26,6 +26,9 @@ public class CreateBlogPostRequest {
     private String metaTitle;
     private String metaDescription;
 
-    /** DRAFT or PUBLISHED */
+    /** DRAFT, SCHEDULED, or PUBLISHED */
     private String status;
+
+    /** ISO-8601 local datetime (e.g. "2026-04-15T09:00"). Required when status=SCHEDULED. */
+    private String scheduledAt;
 }

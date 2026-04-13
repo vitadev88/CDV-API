@@ -65,4 +65,8 @@ public class BlogPost extends BaseEntity {
 
     @Column(name = "published_at")
     private LocalDateTime publishedAt;
+
+    /** Non-null only when status = SCHEDULED. Auto-cleared on publish. */
+    @Column(name = "scheduled_at")
+    private LocalDateTime scheduledAt;
 }
