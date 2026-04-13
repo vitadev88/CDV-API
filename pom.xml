@@ -22,8 +22,8 @@
         <jjwt.version>0.12.5</jjwt.version>
         <lombok.version>1.18.34</lombok.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
-        <!-- Fix CVE-2025-24813: Tomcat RCE vulnerability -->
-        <tomcat.version>10.1.35</tomcat.version>
+        <!-- Fix CVE-2025-24813 + CVE-2026-29145: Tomcat RCE + Authentication bypass -->
+        <tomcat.version>10.1.53</tomcat.version>
         <!-- Fix CVE-2026-22732: Spring Security policy bypass and information disclosure -->
         <spring-security.version>6.5.9</spring-security.version>
     </properties>
