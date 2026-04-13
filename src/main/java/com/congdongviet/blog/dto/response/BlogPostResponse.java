@@ -29,6 +29,7 @@ public class BlogPostResponse {
     private String status;
     private Long viewCount;
     private LocalDateTime publishedAt;
+    private LocalDateTime scheduledAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -52,6 +53,7 @@ public class BlogPostResponse {
                 .status(p.getStatus().name())
                 .viewCount(p.getViewCount())
                 .publishedAt(p.getPublishedAt())
+                .scheduledAt(p.getScheduledAt())
                 .createdAt(p.getCreatedAt())
                 .updatedAt(p.getUpdatedAt())
                 .build();

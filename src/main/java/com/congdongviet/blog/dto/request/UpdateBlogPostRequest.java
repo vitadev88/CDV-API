@@ -19,4 +19,7 @@ public class UpdateBlogPostRequest {
     private String metaTitle;
     private String metaDescription;
     private String status;
+
+    /** ISO-8601 local datetime. Required when status=SCHEDULED. */
+    private String scheduledAt;
 }
