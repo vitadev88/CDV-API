@@ -13,8 +13,10 @@ public final class SlugUtils {
 
     public static String toSlug(String input) {
         if (input == null || input.isBlank()) return "";
+        // Replace 'đ'/'Đ' manually — NFD cannot decompose these (U+0110/U+0111)
+        String dediacritized = input.trim().toLowerCase().replace('đ', 'd');
         // Decompose Unicode (e.g. "ộ" → "o" + combining marks), then strip combining marks
-        String normalized = Normalizer.normalize(input.trim().toLowerCase(), Normalizer.Form.NFD);
+        String normalized = Normalizer.normalize(dediacritized, Normalizer.Form.NFD);
         String ascii = NON_ASCII.matcher(normalized).replaceAll("");
         String slug  = NON_SLUG.matcher(ascii.replace(' ', '-')).replaceAll("");
         return DASHES.matcher(slug).replaceAll("-").replaceAll("^-|-$", "");
